@@ -1,0 +1,45 @@
+{
+  "name": "language-stylus",
+  "displayName": "language-stylus",
+  "description": "Stylus language support",
+  "version": "0.0.1",
+  "publisher": "sysoev",
+  "engines": {
+    "vscode": "^0.10.10"
+  },
+  "categories": [
+    "Languages"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "stylus",
+        "aliases": [
+          "Stylus",
+          "stylus"
+        ],
+        "extensions": [
+          ".styl",
+          ".stylus"
+        ],
+        "configuration": "./stylus.configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "stylus",
+        "scopeName": "source.stylus",
+        "path": "./syntaxes/stylus.json"
+      }
+    ]
+  },
+  "devDependencies": {
+    "conventional-github-releaser": "^1.1.1",
+    "cz-conventional-changelog": "^1.1.5"
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
+  }
+}
