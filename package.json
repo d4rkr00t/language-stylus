@@ -8,6 +8,7 @@
     "vscode": "^0.10.10"
   },
   "main": "./out/src/extension",
+  "icon": "assets/icon.png",
   "activationEvents": [
     "onLanguage:stylus"
   ],

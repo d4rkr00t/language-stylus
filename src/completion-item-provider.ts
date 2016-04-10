@@ -77,10 +77,6 @@ export function getValues(cssSchema, currentWord:string) : CompletionItem[] {
   });
 }
 
-// TODO: Symbols completion
-// TODO: Better value completion
-// TODO: Tags completion
-// TODO: SVG properties completion
 class StylusCompletion implements CompletionItemProvider {
   provideCompletionItems(document: TextDocument, position: Position, token: CancellationToken) : CompletionItem[] {
     const start = new Position(position.line, 0);
