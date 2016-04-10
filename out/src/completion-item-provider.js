@@ -65,10 +65,6 @@ function getValues(cssSchema, currentWord) {
     });
 }
 exports.getValues = getValues;
-// TODO: Symbols completion
-// TODO: Better value completion
-// TODO: Tags completion
-// TODO: SVG properties completion
 var StylusCompletion = (function () {
     function StylusCompletion() {
     }
