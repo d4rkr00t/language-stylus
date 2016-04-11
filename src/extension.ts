@@ -4,22 +4,18 @@
 import * as vscode from 'vscode';
 
 import CompletionProvider from './completion-item-provider';
+import { StylusDocumentSimbolsProvider } from './symbols-provider';
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
   const completionItemProvider = new CompletionProvider();
+  const completionProviderDisposable = vscode.languages.registerCompletionItemProvider('stylus', completionItemProvider);
+  context.subscriptions.push(completionProviderDisposable);
 
-  // Use the console to output diagnostic information (console.log) and errors (console.error)
-  // This line of code will only be executed once when your extension is activated
-  console.log('Congratulations, your extension "test" is now active!');
-
-  // The command has been defined in the package.json file
-  // Now provide the implementation of the command with  registerCommand
-  // The commandId parameter must match the command field in package.json
-  const disposable = vscode.languages.registerCompletionItemProvider('stylus', completionItemProvider);
-
-  context.subscriptions.push(disposable);
+  const symbolsProvider = new StylusDocumentSimbolsProvider();
+  const symbolsProviderDisposable = vscode.languages.registerDocumentSymbolProvider('stylus', symbolsProvider);
+  context.subscriptions.push(symbolsProviderDisposable);
 }
 
 // this method is called when your extension is deactivated
