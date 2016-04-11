@@ -13,6 +13,7 @@ Syntax was stolen from here: https://github.com/matthojo/language-stylus.
 
 * Syntax highlighting
 * Simple code completion
+* Simple symbols provider
 
 ![Simple Completion in Action](assets/completion.gif)
 
