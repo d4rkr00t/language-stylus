@@ -12,15 +12,16 @@ Syntax was stolen from here: https://github.com/matthojo/language-stylus.
 ### Features
 
 * Syntax highlighting
+* Symbols provider
 * Simple code completion
-* Simple symbols provider
 
 ![Simple Completion in Action](assets/completion.gif)
+
+![Symbols Provider in Action](assets/symbols.gif)
 
 ### TODO
 * Symbols and tags completion
 * Better value completion
 * SVG properties completion
 * Color highlighting
-* Symbols provider
 * Variables support

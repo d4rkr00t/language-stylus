@@ -7,8 +7,23 @@
     "engines": {
         "vscode": "^0.10.10"
     },
+    "license": "MIT",
+    "homepage": "https://github.com/d4rkr00t/language-stylus",
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/d4rkr00t/language-stylus.git"
+    },
+    "bugs": "https://github.com/d4rkr00t/language-stylus/issues",
     "main": "./out/src/extension",
     "icon": "assets/icon.png",
+    "keywords": [
+      "vscode",
+      "stylus",
+      "language-stylus",
+      "vscode-stylus",
+      "language-support",
+      "stylus-intellisense"
+    ],
     "activationEvents": [
         "onLanguage:stylus"
     ],
