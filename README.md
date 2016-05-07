@@ -13,15 +13,14 @@ Syntax was stolen from here: https://github.com/matthojo/language-stylus.
 
 * Syntax highlighting
 * Symbols provider
-* Simple code completion
+* Completion for selectors, properties, values, variables, functions etc.
 
-![Simple Completion in Action](assets/completion.gif)
+![Completion in Action](assets/completion.gif)
 
 ![Symbols Provider in Action](assets/symbols.gif)
 
 ### TODO
-* Symbols and tags completion
-* Better value completion
+* Tags completion
+* Built-in functions completions
 * SVG properties completion
-* Color highlighting
-* Variables support
+* Color highlighting (currently only hacky way)
