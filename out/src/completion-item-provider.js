@@ -3,6 +3,7 @@ var vscode_1 = require('vscode');
 var parser_1 = require('./parser');
 var utils_1 = require('./utils');
 var cssSchema = require('./css-schema');
+var built_in_1 = require('./built-in');
 /**
  * Naive check whether currentWord is class or id
  * @param {String} currentWord
@@ -209,7 +210,7 @@ var StylusCompletion = (function () {
             properties = getProperties(cssSchema, currentWord);
             symbols = utils_1.compact(getAllSymbols(text, currentWord));
         }
-        var completions = [].concat(symbols, atRules, properties, values);
+        var completions = [].concat(symbols, atRules, properties, values, built_in_1.default);
         return completions;
     };
     return StylusCompletion;

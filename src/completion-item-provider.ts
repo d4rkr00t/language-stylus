@@ -15,6 +15,7 @@ import {
 } from './utils';
 
 import * as  cssSchema from './css-schema';
+import builtIn from './built-in';
 
 /**
  * Naive check whether currentWord is class or id
@@ -252,7 +253,8 @@ class StylusCompletion implements CompletionItemProvider {
       symbols,
       atRules,
       properties,
-      values
+      values,
+      builtIn
     );
 
     return completions;

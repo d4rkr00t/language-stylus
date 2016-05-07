@@ -21,6 +21,5 @@ Syntax was stolen from here: https://github.com/matthojo/language-stylus.
 
 ### TODO
 * Tags completion
-* Built-in functions completions
 * SVG properties completion
 * Color highlighting (currently only hacky way)
