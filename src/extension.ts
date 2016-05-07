@@ -10,8 +10,13 @@ import { StylusDocumentSimbolsProvider } from './symbols-provider';
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
   const completionItemProvider = new CompletionProvider();
-  const completionProviderDisposable = vscode.languages.registerCompletionItemProvider('stylus', completionItemProvider);
+  const completionProviderDisposable = vscode.languages
+    .registerCompletionItemProvider('stylus', completionItemProvider, '\\.', '$', '-', '&', '/', '{', '}', '@');
   context.subscriptions.push(completionProviderDisposable);
+
+  vscode.languages.setLanguageConfiguration('stylus', {
+    wordPattern: /(#?-?\d*\.\d\w*%?)|([$@#!.:]?[\w-?]+%?)|[$@#!.]/g
+  });
 
   const symbolsProvider = new StylusDocumentSimbolsProvider();
   const symbolsProviderDisposable = vscode.languages.registerDocumentSymbolProvider('stylus', symbolsProvider);

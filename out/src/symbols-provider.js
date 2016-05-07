@@ -1,15 +1,7 @@
 "use strict";
 var vscode_1 = require('vscode');
-var stylus = require('stylus');
-/**
- * Removes falsy values from array
- * @param {Array} arr
- * @return Array
- */
-function compact(arr) {
-    return arr.filter(function (item) { return item; });
-}
-exports.compact = compact;
+var parser_1 = require('./parser');
+var utils_1 = require('./utils');
 /**
  * Generates hash for symbol for comparison with other symbols
  * @param {SymbolInformation} symbol
@@ -36,57 +28,6 @@ function uniq(symbols) {
     }, []);
 }
 exports.uniq = uniq;
-/**
- * Removes useless characters from symbol name
- * @param {String} name
- * @return String
- */
-function prepareName(name) {
-    return name.replace(/\{|\}/g, '').trim();
-}
-exports.prepareName = prepareName;
-/**
- * Parses text editor content and returns ast
- * @param {string} text - text editor content
- * @return {Object}
- */
-function buildAst(text) {
-    return new stylus.Parser(text).parse();
-}
-exports.buildAst = buildAst;
-/**
- * Flattens ast and removes useless nodes
- * @param {Object} node
- * @return {Array}
- */
-function flattenAndFilter(node) {
-    if (Array.isArray(node)) {
-        return node.reduce(function (acc, item) {
-            return acc.concat(flattenAndFilter(item));
-        }, []);
-    }
-    if (!node.nodeName)
-        return;
-    if (node.nodeName === 'property')
-        return;
-    if (node.nodeName === 'keyframes')
-        return node;
-    var nested = [];
-    if (node.nodes) {
-        nested = nested.concat(flattenAndFilter(node.nodes));
-    }
-    if (node.block) {
-        nested = nested.concat(flattenAndFilter(node.block));
-    }
-    if (node.nodeName === 'group' || node.nodeName === 'root' || node.nodeName === 'block') {
-        return nested.length ? nested : node;
-    }
-    // Hack prevents duplicated nodes.
-    node.nodes = null;
-    node.block = null;
-    return nested.length ? [node].concat(nested) : node;
-}
-exports.flattenAndFilter = flattenAndFilter;
 /**
  * Handler for variables
  * @param {Object} node
@@ -140,7 +81,7 @@ function _selectorSymbol(node, text) {
  */
 function _selectorCallSymbol(node, text) {
     var lineno = Number(node.lineno) - 1;
-    var name = prepareName(text[lineno]);
+    var name = utils_1.prepareName(text[lineno]);
     var column = Math.max(text[lineno].indexOf(name), 0);
     var posStart = new vscode_1.Position(lineno, column);
     var posEnd = new vscode_1.Position(lineno, column + name.length);
@@ -154,7 +95,7 @@ function _selectorCallSymbol(node, text) {
  */
 function _atRuleSymbol(node, text) {
     var lineno = Number(node.lineno) - 1;
-    var name = prepareName(text[lineno]);
+    var name = utils_1.prepareName(text[lineno]);
     var column = Math.max(text[lineno].indexOf(name), 0);
     var posStart = new vscode_1.Position(lineno, column);
     var posEnd = new vscode_1.Position(lineno, column + name.length);
@@ -168,19 +109,19 @@ function _atRuleSymbol(node, text) {
  */
 function processRawSymbols(rawSymbols, text) {
     return rawSymbols.map(function (symNode) {
-        if (symNode.nodeName === 'ident' && symNode.val && symNode.val.nodeName === 'expression') {
+        if (parser_1.isVariableNode(symNode)) {
             return _variableSymbol(symNode, text);
         }
-        if (symNode.nodeName === 'ident' && symNode.val && symNode.val.nodeName === 'function') {
+        if (parser_1.isFunctionNode(symNode)) {
             return _functionSymbol(symNode, text);
         }
-        if (symNode.nodeName === 'selector') {
+        if (parser_1.isSelectorNode(symNode)) {
             return _selectorSymbol(symNode, text);
         }
-        if (symNode.nodeName === 'call' && symNode.name === 'selector') {
+        if (parser_1.isSelectorCallNode(symNode)) {
             return _selectorCallSymbol(symNode, text);
         }
-        if (['media', 'keyframes', 'atrule', 'import', 'require', 'supports', 'literal'].indexOf(symNode.nodeName) !== -1) {
+        if (parser_1.isAtRuleNode(symNode)) {
             return _atRuleSymbol(symNode, text);
         }
     });
@@ -190,13 +131,13 @@ var StylusDocumentSimbolsProvider = (function () {
     }
     StylusDocumentSimbolsProvider.prototype.provideDocumentSymbols = function (document, token) {
         var text = document.getText();
-        var ast = buildAst(text);
-        var rawSymbols = compact(flattenAndFilter(ast));
+        var ast = parser_1.buildAst(text);
+        var rawSymbols = utils_1.compact(parser_1.flattenAndFilterAst(ast));
         // Code smell here. Lazy debug thing.
         // console.log(ast);
         // console.log(rawSymbols);
         // console.log(uniq(compact(processRawSymbols(rawSymbols, text.split('\n')))));
-        return uniq(compact(processRawSymbols(rawSymbols, text.split('\n'))));
+        return uniq(utils_1.compact(processRawSymbols(rawSymbols, text.split('\n'))));
     };
     return StylusDocumentSimbolsProvider;
 }());

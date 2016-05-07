@@ -8,8 +8,12 @@ var symbols_provider_1 = require('./symbols-provider');
 // your extension is activated the very first time the command is executed
 function activate(context) {
     var completionItemProvider = new completion_item_provider_1.default();
-    var completionProviderDisposable = vscode.languages.registerCompletionItemProvider('stylus', completionItemProvider);
+    var completionProviderDisposable = vscode.languages
+        .registerCompletionItemProvider('stylus', completionItemProvider, '\\.', '$', '-', '&', '/', '{', '}', '@');
     context.subscriptions.push(completionProviderDisposable);
+    vscode.languages.setLanguageConfiguration('stylus', {
+        wordPattern: /(#?-?\d*\.\d\w*%?)|([$@#!.:]?[\w-?]+%?)|[$@#!.]/g
+    });
     var symbolsProvider = new symbols_provider_1.StylusDocumentSimbolsProvider();
     var symbolsProviderDisposable = vscode.languages.registerDocumentSymbolProvider('stylus', symbolsProvider);
     context.subscriptions.push(symbolsProviderDisposable);

@@ -4,16 +4,16 @@ import {
   SymbolKind, Range, Position
 } from 'vscode';
 
-const stylus = require('stylus');
+import {
+  StylusNode,
+  buildAst, flattenAndFilterAst,
+  isAtRuleNode, isFunctionNode, isSelectorCallNode, isSelectorNode, isVariableNode
+} from './parser';
 
-/**
- * Removes falsy values from array
- * @param {Array} arr
- * @return Array
- */
-export function compact(arr:Array<any>) : Array<any> {
-  return arr.filter(item => item);
-}
+import {
+  compact,
+  prepareName
+} from './utils';
 
 /**
  * Generates hash for symbol for comparison with other symbols
@@ -45,67 +45,12 @@ export function uniq(symbols:SymbolInformation[]) : SymbolInformation[] {
 }
 
 /**
- * Removes useless characters from symbol name
- * @param {String} name
- * @return String
- */
-export function prepareName(name:string) : string {
-  return name.replace(/\{|\}/g, '').trim();
-}
-
-/**
- * Parses text editor content and returns ast
- * @param {string} text - text editor content
- * @return {Object}
- */
-export function buildAst(text:string) {
-  return new stylus.Parser(text).parse();
-}
-
-/**
- * Flattens ast and removes useless nodes
- * @param {Object} node
- * @return {Array}
- */
-export function flattenAndFilter(node) {
-  if (Array.isArray(node)) {
-    return node.reduce((acc, item) => {
-      return acc.concat(flattenAndFilter(item));
-    }, []);
-  }
-
-  if (!node.nodeName) return;
-  if (node.nodeName === 'property') return;
-  if (node.nodeName === 'keyframes') return node;
-
-  let nested = [];
-
-  if (node.nodes) {
-    nested = nested.concat(flattenAndFilter(node.nodes));
-  }
-
-  if (node.block) {
-    nested = nested.concat(flattenAndFilter(node.block));
-  }
-
-  if (node.nodeName === 'group' || node.nodeName === 'root' || node.nodeName === 'block') {
-    return nested.length ? nested : node;
-  }
-
-  // Hack prevents duplicated nodes.
-  node.nodes = null;
-  node.block = null;
-
-  return nested.length ? [node].concat(nested) : node;
-}
-
-/**
  * Handler for variables
  * @param {Object} node
  * @param {String[]} text - text editor content splitted by lines
  * @return {SymbolInformation}
  */
-function _variableSymbol(node, text:string[]) : SymbolInformation {
+function _variableSymbol(node:StylusNode, text:string[]) : SymbolInformation {
   const name = node.name;
   const lineno = Number(node.val.lineno) - 1;
   const column = Math.max(text[lineno].indexOf(name), 0);
@@ -122,7 +67,7 @@ function _variableSymbol(node, text:string[]) : SymbolInformation {
  * @param {String[]} text - text editor content splitted by lines
  * @return {SymbolInformation}
  */
-function _functionSymbol(node, text:string[]) : SymbolInformation {
+function _functionSymbol(node:StylusNode, text:string[]) : SymbolInformation {
   const name = node.name;
   const lineno = Number(node.val.lineno) - 1;
   const column = Math.max(text[lineno].indexOf(name), 0);
@@ -139,7 +84,7 @@ function _functionSymbol(node, text:string[]) : SymbolInformation {
  * @param {String[]} text - text editor content splitted by lines
  * @return {SymbolInformation}
  */
-function _selectorSymbol(node, text:string[]) : SymbolInformation {
+function _selectorSymbol(node:StylusNode, text:string[]) : SymbolInformation {
   const firstSegment = node.segments[0];
   const name = firstSegment.string ?
     node.segments.map(s => s.string).join('') :
@@ -159,7 +104,7 @@ function _selectorSymbol(node, text:string[]) : SymbolInformation {
  * @param {String[]} text - text editor content splitted by lines
  * @return {SymbolInformation}
  */
-function _selectorCallSymbol(node, text:string[]) : SymbolInformation {
+function _selectorCallSymbol(node:StylusNode, text:string[]) : SymbolInformation {
   const lineno = Number(node.lineno) - 1;
   const name = prepareName(text[lineno]);
   const column = Math.max(text[lineno].indexOf(name), 0);
@@ -176,7 +121,7 @@ function _selectorCallSymbol(node, text:string[]) : SymbolInformation {
  * @param {String[]} text - text editor content splitted by lines
  * @return {SymbolInformation}
  */
-function _atRuleSymbol(node, text:string[]) : SymbolInformation {
+function _atRuleSymbol(node:StylusNode, text:string[]) : SymbolInformation {
   const lineno = Number(node.lineno) - 1;
   const name = prepareName(text[lineno]);
   const column = Math.max(text[lineno].indexOf(name), 0);
@@ -193,25 +138,25 @@ function _atRuleSymbol(node, text:string[]) : SymbolInformation {
  * @param {String[]} text - text editor content splitted by lines
  * @return {SymbolInformation[]}
  */
-function processRawSymbols(rawSymbols:Array<any>, text:string[]) : SymbolInformation[] {
+function processRawSymbols(rawSymbols:Array<StylusNode>, text:string[]) : SymbolInformation[] {
   return rawSymbols.map(symNode => {
-    if (symNode.nodeName === 'ident' && symNode.val && symNode.val.nodeName === 'expression') {
+    if (isVariableNode(symNode)) {
       return _variableSymbol(symNode, text);
     }
 
-    if (symNode.nodeName === 'ident' && symNode.val && symNode.val.nodeName === 'function') {
+    if (isFunctionNode(symNode)) {
       return _functionSymbol(symNode, text);
     }
 
-    if (symNode.nodeName === 'selector') {
+    if (isSelectorNode(symNode)) {
       return _selectorSymbol(symNode, text);
     }
 
-    if (symNode.nodeName === 'call' && symNode.name === 'selector') {
+    if (isSelectorCallNode(symNode)) {
       return _selectorCallSymbol(symNode, text);
     }
 
-    if (['media', 'keyframes', 'atrule', 'import', 'require', 'supports', 'literal'].indexOf(symNode.nodeName) !== -1) {
+    if (isAtRuleNode(symNode)) {
       return _atRuleSymbol(symNode, text);
     }
   });
@@ -221,7 +166,7 @@ export class StylusDocumentSimbolsProvider implements DocumentSymbolProvider {
   provideDocumentSymbols(document: TextDocument, token: CancellationToken) : SymbolInformation[] {
     const text = document.getText();
     const ast = buildAst(text);
-    const rawSymbols = compact(flattenAndFilter(ast));
+    const rawSymbols:StylusNode[] = compact(flattenAndFilterAst(ast));
 
     // Code smell here. Lazy debug thing.
     // console.log(ast);
