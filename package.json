@@ -61,12 +61,12 @@
     "devDependencies": {
         "typescript": "^1.8.10",
         "vscode": "^0.11.0",
-        "conventional-github-releaser": "^1.1.1",
-        "cz-conventional-changelog": "^1.1.5"
+        "conventional-github-releaser": "^1.1.2",
+        "cz-conventional-changelog": "^1.1.6"
     },
     "config": {
         "commitizen": {
-            "path": "./node_modules/cz-conventional-changelog"
+            "path": "cz-conventional-changelog"
         }
     },
     "dependencies": {
