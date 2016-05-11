@@ -52,7 +52,12 @@ exports.isAtRuleNode = isAtRuleNode;
  * @return {Object}
  */
 function buildAst(text) {
-    return new stylus.Parser(text).parse();
+    try {
+        return new stylus.Parser(text).parse();
+    }
+    catch (error) {
+        return [];
+    }
 }
 exports.buildAst = buildAst;
 /**

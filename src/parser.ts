@@ -73,8 +73,12 @@ export function isAtRuleNode(node:StylusNode) : boolean {
  * @param {string} text - text editor content
  * @return {Object}
  */
-export function buildAst(text:string) : StylusNode {
-  return new stylus.Parser(text).parse();
+export function buildAst(text:string) : StylusNode | any[] {
+  try {
+    return new stylus.Parser(text).parse();
+  } catch (error) {
+    return [];
+  }
 }
 
 /**
