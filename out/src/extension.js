@@ -9,7 +9,7 @@ var symbols_provider_1 = require('./symbols-provider');
 function activate(context) {
     var completionItemProvider = new completion_item_provider_1.default();
     var completionProviderDisposable = vscode.languages
-        .registerCompletionItemProvider('stylus', completionItemProvider, '\\.', '$', '-', '&', '/', '{', '}', '@');
+        .registerCompletionItemProvider('stylus', completionItemProvider, '\\.', '$', '-', '&', '@');
     context.subscriptions.push(completionProviderDisposable);
     vscode.languages.setLanguageConfiguration('stylus', {
         wordPattern: /(#?-?\d*\.\d\w*%?)|([$@#!.:]?[\w-?]+%?)|[$@#!.]/g

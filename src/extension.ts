@@ -11,7 +11,7 @@ import { StylusDocumentSimbolsProvider } from './symbols-provider';
 export function activate(context: vscode.ExtensionContext) {
   const completionItemProvider = new CompletionProvider();
   const completionProviderDisposable = vscode.languages
-    .registerCompletionItemProvider('stylus', completionItemProvider, '\\.', '$', '-', '&', '/', '{', '}', '@');
+    .registerCompletionItemProvider('stylus', completionItemProvider, '\\.', '$', '-', '&', '@');
   context.subscriptions.push(completionProviderDisposable);
 
   vscode.languages.setLanguageConfiguration('stylus', {
