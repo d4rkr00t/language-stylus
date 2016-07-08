@@ -195,7 +195,7 @@ export function getProperties(cssSchema, currentWord:string) : CompletionItem[] 
   return cssSchema.data.css.properties.map(property => {
     const completionItem = new CompletionItem(property.name);
 
-    completionItem.insertText = property.name + ': ';
+    completionItem.insertText = property.name + ' ';
     completionItem.detail = property.desc;
     completionItem.kind = CompletionItemKind.Property;
 
