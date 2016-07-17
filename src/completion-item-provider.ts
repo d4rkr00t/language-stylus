@@ -1,6 +1,7 @@
 import {
   CompletionItemProvider, CompletionItem, CompletionItemKind,
-  TextDocument, Position, CancellationToken, Range
+  TextDocument, Position, CancellationToken, Range,
+  workspace
 } from 'vscode';
 
 import {
@@ -189,13 +190,15 @@ export function getAtRules(cssSchema, currentWord:string) : CompletionItem[] {
  * @param {String} currentWord
  * @return {CompletionItem}
  */
-export function getProperties(cssSchema, currentWord:string) : CompletionItem[] {
+export function getProperties(cssSchema, currentWord:string, useSeparator:boolean) : CompletionItem[] {
   if (isClassOrId(currentWord) || isAtRule(currentWord)) return [];
+
+  console.log(useSeparator);
 
   return cssSchema.data.css.properties.map(property => {
     const completionItem = new CompletionItem(property.name);
 
-    completionItem.insertText = property.name + ': ';
+    completionItem.insertText = property.name + (useSeparator ? ': ' : ' ');
     completionItem.detail = property.desc;
     completionItem.kind = CompletionItemKind.Property;
 
@@ -232,6 +235,7 @@ class StylusCompletion implements CompletionItemProvider {
     const currentWord = document.getText(range).trim();
     const text = document.getText();
     const value = isValue(cssSchema, currentWord);
+    const config = workspace.getConfiguration('languageStylus');
 
     let symbols = [],
         atRules = [],
@@ -245,7 +249,7 @@ class StylusCompletion implements CompletionItemProvider {
       );
     } else {
       atRules = getAtRules(cssSchema, currentWord);
-      properties = getProperties(cssSchema, currentWord);
+      properties = getProperties(cssSchema, currentWord, config.get('useSeparator', true));
       symbols = compact(getAllSymbols(text, currentWord));
     }
 

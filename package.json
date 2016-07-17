@@ -51,11 +51,23 @@
                 "scopeName": "source.stylus",
                 "path": "./syntaxes/stylus.json"
             }
-        ]
+        ],
+        "configuration": {
+            "type": "object",
+            "title": "Language Stylus Configuration",
+            "properties": {
+                "languageStylus.useSeparator": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Separate property from value with ':'."
+                }
+            }
+        }
     },
     "scripts": {
         "vscode:prepublish": "node ./node_modules/vscode/bin/compile",
         "compile": "node ./node_modules/vscode/bin/compile -watch -p ./",
+        "build": "node ./node_modules/vscode/bin/compile -p ./",
         "postinstall": "node ./node_modules/vscode/bin/install"
     },
     "devDependencies": {
