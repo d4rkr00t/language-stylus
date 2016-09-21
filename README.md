@@ -19,6 +19,14 @@ Syntax was stolen from here: https://github.com/matthojo/language-stylus.
 
 ![Symbols Provider in Action](assets/symbols.gif)
 
+### Configuration
+```js
+{
+  // Use ':' as separator between property and value
+  "languageStylus.useSeparator": true // default value
+}
+```
+
 ### TODO
 * Tags completion
 * SVG properties completion
