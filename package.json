@@ -60,6 +60,11 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Separate property from value with ':'."
+                },
+                "languageStylus.useBuiltinFunctions": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Toggle matches for Stylus Builtin Functions on autocomplete."
                 }
             }
         }
