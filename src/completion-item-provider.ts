@@ -258,7 +258,7 @@ class StylusCompletion implements CompletionItemProvider {
       atRules,
       properties,
       values,
-      builtIn
+      config.get('useBuiltinFunctions', true) ? builtIn : []
     );
 
     return completions;

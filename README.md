@@ -23,7 +23,9 @@ Syntax was stolen from here: https://github.com/matthojo/language-stylus.
 ```js
 {
   // Use ':' as separator between property and value
-  "languageStylus.useSeparator": true // default value
+  "languageStylus.useSeparator": true, // default value
+  // Toggle matches for Stylus Builtin Functions on autocomplete
+  "languageStylus.useBuiltinFunctions": true, // default value
 }
 ```
 
