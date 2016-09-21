@@ -161,7 +161,6 @@ exports.getAtRules = getAtRules;
 function getProperties(cssSchema, currentWord, useSeparator) {
     if (isClassOrId(currentWord) || isAtRule(currentWord))
         return [];
-    console.log(useSeparator);
     return cssSchema.data.css.properties.map(function (property) {
         var completionItem = new vscode_1.CompletionItem(property.name);
         completionItem.insertText = property.name + (useSeparator ? ': ' : ' ');
@@ -212,7 +211,7 @@ var StylusCompletion = (function () {
             properties = getProperties(cssSchema, currentWord, config.get('useSeparator', true));
             symbols = utils_1.compact(getAllSymbols(text, currentWord));
         }
-        var completions = [].concat(symbols, atRules, properties, values, built_in_1.default);
+        var completions = [].concat(symbols, atRules, properties, values, config.get('useBuiltinFunctions', true) ? built_in_1.default : []);
         return completions;
     };
     return StylusCompletion;

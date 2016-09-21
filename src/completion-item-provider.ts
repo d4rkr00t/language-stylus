@@ -193,8 +193,6 @@ export function getAtRules(cssSchema, currentWord:string) : CompletionItem[] {
 export function getProperties(cssSchema, currentWord:string, useSeparator:boolean) : CompletionItem[] {
   if (isClassOrId(currentWord) || isAtRule(currentWord)) return [];
 
-  console.log(useSeparator);
-
   return cssSchema.data.css.properties.map(property => {
     const completionItem = new CompletionItem(property.name);
 
