@@ -77,7 +77,7 @@
     },
     "devDependencies": {
         "typescript": "^1.8.10",
-        "vscode": "^1.0.0",
+        "vscode": "^1.0.1",
         "conventional-github-releaser": "^1.1.2",
         "cz-conventional-changelog": "^1.2.0"
     },
