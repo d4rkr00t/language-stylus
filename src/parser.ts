@@ -1,6 +1,8 @@
-type NodeName = 'indent' | 'selector' | 'call' | 'function' |
+import cssColors from './css-colors-list';
+
+type NodeName = 'ident' | 'selector' | 'call' | 'function' |
  'media' | 'keyframes' | 'atrule' | 'import' | 'require' | 'supports' | 'literal' |
- 'group' | 'root' | 'block';
+ 'group' | 'root' | 'block' | 'expression' | 'rgba' | 'property' | 'object';
 
 type NodeSegment = {
   string: string,
@@ -8,16 +10,22 @@ type NodeSegment = {
   nodes: Array<{ name: string }>
 }
 
+export interface StylusValue {
+  nodeName: NodeName,
+  lineno: number,
+  nodes?: StylusNode[]
+}
+
 export interface StylusNode {
   nodeName: NodeName,
   name: NodeName,
   segments: NodeSegment[],
+  expr?: StylusValue,
   lineno: number,
   column: number,
-  val: {
-    nodeName: NodeName,
-    lineno: number
-  }
+  val: StylusValue,
+  nodes?: StylusNode[],
+  vals?: StylusNode[]
 }
 
 const stylus = require('stylus');
@@ -69,6 +77,18 @@ export function isAtRuleNode(node:StylusNode) : boolean {
 }
 
 /**
+ * Checks wether node contains color
+ * @param {StylusNode} node
+ * @return {Boolean}
+ */
+export function isColor(node:StylusNode) : boolean {
+  if (node.nodeName === 'ident' && cssColors.indexOf(node.name) >= 0) return true;
+  if (node.nodeName === 'rgba') return true;
+  if (node.nodeName === 'call' && ['rgb', 'rgba', 'hsl', 'hsla'].indexOf(node.name) >= 0) return true;
+  return false;
+}
+
+/**
  * Parses text editor content and returns ast
  * @param {string} text - text editor content
  * @return {Object}
@@ -94,7 +114,6 @@ export function flattenAndFilterAst(node) : StylusNode[] {
   }
 
   if (!node.nodeName) return;
-  if (node.nodeName === 'property') return;
   if (node.nodeName === 'keyframes') return node;
 
   let nested = [];
