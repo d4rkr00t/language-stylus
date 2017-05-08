@@ -2,7 +2,7 @@
     "name": "language-stylus",
     "displayName": "language-stylus",
     "description": "Stylus language support",
-    "version": "1.7.0",
+    "version": "1.7.1",
     "publisher": "sysoev",
     "engines": {
         "vscode": "^0.10.10"
