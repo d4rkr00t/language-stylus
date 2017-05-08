@@ -1,5 +1,7 @@
 "use strict";
-var stylus = require('stylus');
+Object.defineProperty(exports, "__esModule", { value: true });
+const css_colors_list_1 = require("./css-colors-list");
+const stylus = require('stylus');
 /**
  * Checks wether node is variable declaration
  * @param {StylusNode} node
@@ -47,6 +49,21 @@ function isAtRuleNode(node) {
 }
 exports.isAtRuleNode = isAtRuleNode;
 /**
+ * Checks wether node contains color
+ * @param {StylusNode} node
+ * @return {Boolean}
+ */
+function isColor(node) {
+    if (node.nodeName === 'ident' && css_colors_list_1.default.indexOf(node.name) >= 0)
+        return true;
+    if (node.nodeName === 'rgba')
+        return true;
+    if (node.nodeName === 'call' && ['rgb', 'rgba', 'hsl', 'hsla'].indexOf(node.name) >= 0)
+        return true;
+    return false;
+}
+exports.isColor = isColor;
+/**
  * Parses text editor content and returns ast
  * @param {string} text - text editor content
  * @return {Object}
@@ -67,17 +84,15 @@ exports.buildAst = buildAst;
  */
 function flattenAndFilterAst(node) {
     if (Array.isArray(node)) {
-        return node.reduce(function (acc, item) {
+        return node.reduce((acc, item) => {
             return acc.concat(flattenAndFilterAst(item));
         }, []);
     }
     if (!node.nodeName)
         return;
-    if (node.nodeName === 'property')
-        return;
     if (node.nodeName === 'keyframes')
         return node;
-    var nested = [];
+    let nested = [];
     if (node.nodes) {
         nested = nested.concat(flattenAndFilterAst(node.nodes));
     }

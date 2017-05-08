@@ -1,6 +1,7 @@
 "use strict";
-var vscode_1 = require('vscode');
-var builtIn = [
+Object.defineProperty(exports, "__esModule", { value: true });
+const vscode_1 = require("vscode");
+const builtIn = [
     {
         "name": "red(color[, value])",
         "desc": "Return the red component of the given color, or set the red component to the optional second value argument.",
@@ -432,9 +433,8 @@ var builtIn = [
         "insertText": "use()"
     }
 ];
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.default = builtIn.map(function (item) {
-    var completionItem = new vscode_1.CompletionItem(item.name);
+exports.default = builtIn.map((item) => {
+    const completionItem = new vscode_1.CompletionItem(item.name);
     completionItem.detail = item.desc;
     completionItem.insertText = item.insertText;
     completionItem.kind = vscode_1.CompletionItemKind.Function;
