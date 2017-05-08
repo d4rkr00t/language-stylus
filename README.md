@@ -14,6 +14,7 @@ Syntax was stolen from here: https://github.com/matthojo/language-stylus.
 * Syntax highlighting
 * Symbols provider
 * Completion for selectors, properties, values, variables, functions etc.
+* Color preview
 
 ![Completion in Action](assets/completion.gif)
 
@@ -32,4 +33,3 @@ Syntax was stolen from here: https://github.com/matthojo/language-stylus.
 ### TODO
 * Tags completion
 * SVG properties completion
-* Color highlighting (currently only hacky way)
