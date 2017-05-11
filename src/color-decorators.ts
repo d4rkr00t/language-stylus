@@ -58,13 +58,11 @@ export function getColors(ast) {
   }, []);
 }
 
-export function buildCallValueFromArgs(args) {
-  return args.nodes.map(node => node.nodes[0].val).join(', ');
-}
+export const buildCallValueFromArgs = args =>
+  args.nodes.map(node => node.nodes[0].val).join(', ');
 
-export function getRealColumn(textToSearch: string, text: string[], lineno: number) {
-  return Math.max(text[lineno].indexOf(textToSearch), 0);
-}
+export const getRealColumn = (textToSearch: string, text: string[], lineno: number) =>
+  Math.max(text[lineno].indexOf(textToSearch), 0);
 
 export function normalizeColors(colors: StylusNode[], text: string[]) {
   return colors.map(color => {
@@ -108,16 +106,15 @@ export function updateDecorators(colorsDecorationType, editor) {
   }
 }
 
-export function updateDecoratorsWrapper(colorsDecorationType, document) {
-  console.log('update');
-  for (let editor of window.visibleTextEditors) {
-    if (editor.document && document.uri.toString() === editor.document.uri.toString()) {
-      updateDecorators(colorsDecorationType, editor);
-    }
-  }
-}
+export const findEditorByDocument = document =>
+  window.visibleTextEditors.find(editor =>
+    editor.document.uri.toString() === document.uri.toString());
 
-export const updateDecoratorsWrapperDebounced = debounce(updateDecoratorsWrapper, DEBOUNCE_TIME);
+export const updateDecoratorsWrapper = (colorsDecorationType, editor) =>
+  updateDecorators(colorsDecorationType, editor);
+
+export const updateDecoratorsWrapperDebounced =
+  debounce(updateDecoratorsWrapper, DEBOUNCE_TIME);
 
 export function activateColorDecorations(): Disposable {
   const disposables: Disposable[] = [];
@@ -125,23 +122,33 @@ export function activateColorDecorations(): Disposable {
 	disposables.push(colorsDecorationType);
 
   window.visibleTextEditors.forEach(editor => {
-    if (editor.document) {
-      updateDecoratorsWrapper(colorsDecorationType, editor.document);
-    }
+    if (!editor.document) return;
+    updateDecoratorsWrapper(colorsDecorationType, editor);
   });
 
-  workspace.onDidChangeTextDocument(e => {
-    updateDecoratorsWrapperDebounced(colorsDecorationType, e.document);
+  window.onDidChangeActiveTextEditor(editor => {
+    if (!editor.document) return;
+    updateDecoratorsWrapperDebounced(colorsDecorationType, editor);
+  });
+
+  workspace.onDidChangeTextDocument(evt => {
+    if (!evt.document) return;
+    const editor = findEditorByDocument(evt.document);
+    if (!editor) return;
+    updateDecoratorsWrapperDebounced(colorsDecorationType, editor);
   });
 
   workspace.onDidOpenTextDocument(document => {
     if (!document) return;
-    updateDecoratorsWrapperDebounced(colorsDecorationType, document)
+    const editor = findEditorByDocument(document);
+    if (!editor) return;
+    updateDecoratorsWrapperDebounced(colorsDecorationType, editor);
   });
 
   (window as any).onDidChangeVisibleTextEditors(editors => {
     editors.forEach(editor => {
-      updateDecoratorsWrapperDebounced(colorsDecorationType, editor.document);
+      if (!editor.document) return;
+      updateDecoratorsWrapperDebounced(colorsDecorationType, editor);
     })
   });
 
