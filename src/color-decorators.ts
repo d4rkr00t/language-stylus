@@ -122,12 +122,12 @@ export function activateColorDecorations(): Disposable {
 	disposables.push(colorsDecorationType);
 
   window.visibleTextEditors.forEach(editor => {
-    if (!editor.document) return;
+    if (!editor || !editor.document) return;
     updateDecoratorsWrapper(colorsDecorationType, editor);
   });
 
   window.onDidChangeActiveTextEditor(editor => {
-    if (!editor.document) return;
+    if (!editor || !editor.document) return;
     updateDecoratorsWrapperDebounced(colorsDecorationType, editor);
   });
 
