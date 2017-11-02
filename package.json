@@ -65,11 +65,6 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Toggle matches for Stylus Builtin Functions on autocomplete."
-                },
-                "languageStylus.previewColors": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Toggle colors preview."
                 }
             }
         }

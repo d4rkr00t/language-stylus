@@ -27,8 +27,8 @@ Syntax was stolen from here: https://github.com/matthojo/language-stylus.
   "languageStylus.useSeparator": true, // default value
   // Toggle matches for Stylus Builtin Functions on autocomplete
   "languageStylus.useBuiltinFunctions": true, // default value
-  // Toggle color preview
-  "languageStylus.previewColors": true // default value
+  // Toggle colors preview
+  "editor.colorDecorators": true // default value
 }
 ```
 

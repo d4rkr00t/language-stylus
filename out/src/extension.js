@@ -9,6 +9,8 @@ const color_decorators_1 = require("./color-decorators");
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 function activate(context) {
+    const editorConfig = vscode.workspace.getConfiguration('editor');
+    console.log(editorConfig);
     const config = vscode.workspace.getConfiguration('languageStylus');
     const completionItemProvider = new completion_item_provider_1.default();
     const completionProviderDisposable = vscode.languages
@@ -20,7 +22,7 @@ function activate(context) {
     const symbolsProvider = new symbols_provider_1.StylusDocumentSimbolsProvider();
     const symbolsProviderDisposable = vscode.languages.registerDocumentSymbolProvider('stylus', symbolsProvider);
     context.subscriptions.push(symbolsProviderDisposable);
-    if (config.get('previewColors')) {
+    if (editorConfig.get('colorDecorators')) {
         context.subscriptions.push(color_decorators_1.activateColorDecorations());
     }
 }
