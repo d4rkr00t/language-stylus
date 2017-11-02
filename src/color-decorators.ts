@@ -11,7 +11,7 @@ import { debounce } from './utils';
 const MAX_DECORATORS = 500;
 const DEBOUNCE_TIME = 400;
 
-let decorationType = {
+let decorationType: any = {
 	before: {
 		contentText: ' ',
 		border: 'solid 0.1em #000',
