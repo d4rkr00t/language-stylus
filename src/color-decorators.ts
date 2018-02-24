@@ -101,9 +101,7 @@ export function updateDecorators(colorsDecorationType, editor) {
     };
   }).slice(0, MAX_DECORATORS);
 
-  if (decorations && decorations.length) {
-    editor.setDecorations(colorsDecorationType, decorations as any);
-  }
+  editor.setDecorations(colorsDecorationType, decorations as any);
 }
 
 export const findEditorByDocument = document =>
