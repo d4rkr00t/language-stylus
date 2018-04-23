@@ -7,6 +7,11 @@ import CompletionProvider from './completion-item-provider';
 import { StylusDocumentSimbolsProvider } from './symbols-provider';
 import { activateColorDecorations } from './color-decorators';
 
+const DOCUMENT_SELECTOR = {
+  language: 'stylus',
+  scheme: 'file'
+};
+
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
@@ -15,7 +20,7 @@ export function activate(context: vscode.ExtensionContext) {
   const config = vscode.workspace.getConfiguration('languageStylus');
   const completionItemProvider = new CompletionProvider();
   const completionProviderDisposable = vscode.languages
-    .registerCompletionItemProvider('stylus', completionItemProvider, '\\.', '$', '-', '&', '@');
+    .registerCompletionItemProvider(DOCUMENT_SELECTOR, completionItemProvider, '\\.', '$', '-', '&', '@');
   context.subscriptions.push(completionProviderDisposable);
 
   vscode.languages.setLanguageConfiguration('stylus', {
@@ -45,7 +50,7 @@ export function activate(context: vscode.ExtensionContext) {
   });
 
   const symbolsProvider = new StylusDocumentSimbolsProvider();
-  const symbolsProviderDisposable = vscode.languages.registerDocumentSymbolProvider('stylus', symbolsProvider);
+  const symbolsProviderDisposable = vscode.languages.registerDocumentSymbolProvider(DOCUMENT_SELECTOR, symbolsProvider);
   context.subscriptions.push(symbolsProviderDisposable);
 
   if (editorConfig.get('colorDecorators')) {
