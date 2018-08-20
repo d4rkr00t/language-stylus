@@ -2,7 +2,7 @@
     "name": "language-stylus",
     "displayName": "language-stylus",
     "description": "Stylus language support",
-    "version": "1.9.2",
+    "version": "1.10.0",
     "publisher": "sysoev",
     "engines": {
         "vscode": "^1.8.0"
