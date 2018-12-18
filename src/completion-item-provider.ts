@@ -15,8 +15,9 @@ import {
   prepareName
 } from './utils';
 
-import * as  cssSchema from './css-schema';
+import * as cssSchema from './css-schema';
 import builtIn from './built-in';
+import { getPropertyDescription } from './languageFacts';
 
 /**
  * Naive check whether currentWord is class or id
@@ -197,7 +198,7 @@ export function getProperties(cssSchema, currentWord:string, useSeparator:boolea
     const completionItem = new CompletionItem(property.name);
 
     completionItem.insertText = property.name + (useSeparator ? ': ' : ' ');
-    completionItem.detail = property.desc;
+    completionItem.documentation = getPropertyDescription(property);
     completionItem.kind = CompletionItemKind.Property;
 
     return completionItem;
