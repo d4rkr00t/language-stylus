@@ -5,6 +5,7 @@ const parser_1 = require("./parser");
 const utils_1 = require("./utils");
 const cssSchema = require("./css-schema");
 const built_in_1 = require("./built-in");
+const languageFacts_1 = require("./languageFacts");
 /**
  * Naive check whether currentWord is class or id
  * @param {String} currentWord
@@ -163,7 +164,7 @@ function getProperties(cssSchema, currentWord, useSeparator) {
     return cssSchema.data.css.properties.map(property => {
         const completionItem = new vscode_1.CompletionItem(property.name);
         completionItem.insertText = property.name + (useSeparator ? ': ' : ' ');
-        completionItem.detail = property.desc;
+        completionItem.documentation = languageFacts_1.getPropertyDescription(property);
         completionItem.kind = vscode_1.CompletionItemKind.Property;
         return completionItem;
     });
