@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.StylusDocumentSimbolsProvider = exports.uniq = exports._buildHashFromSymbol = void 0;
 const vscode_1 = require("vscode");
 const parser_1 = require("./parser");
 const utils_1 = require("./utils");

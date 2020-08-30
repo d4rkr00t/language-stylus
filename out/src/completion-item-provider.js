@@ -1,11 +1,14 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.getValues = exports.getProperties = exports.getAtRules = exports.getAllSymbols = exports.findPropertySchema = exports.getPropertyName = exports.isValue = exports.isAtRule = exports.isClassOrId = void 0;
 const vscode_1 = require("vscode");
 const parser_1 = require("./parser");
 const utils_1 = require("./utils");
 const cssSchema = require("./css-schema");
 const built_in_1 = require("./built-in");
 const languageFacts_1 = require("./languageFacts");
+const path = require("path");
+const fs = require("fs");
 /**
  * Naive check whether currentWord is class or id
  * @param {String} currentWord
@@ -115,24 +118,34 @@ function _selectorCallSymbol(node, text) {
  * @param {String} currentWord
  * @return {CompletionItem}
  */
-function getAllSymbols(text, currentWord) {
+function getAllSymbols(text, currentWord, fileUri) {
     const ast = parser_1.buildAst(text);
     const splittedText = text.split('\n');
-    const rawSymbols = parser_1.flattenAndFilterAst(ast).filter(item => item && ['media', 'keyframes', 'atrule', 'import', 'require', 'supports', 'literal'].indexOf(item.nodeName) === -1);
-    return rawSymbols.map(item => {
-        if (parser_1.isVariableNode(item)) {
-            return _variableSymbol(item, splittedText, currentWord);
-        }
-        if (parser_1.isFunctionNode(item)) {
-            return _functionSymbol(item, splittedText);
-        }
-        if (parser_1.isSelectorNode(item)) {
-            return _selectorSymbol(item, splittedText, currentWord);
-        }
-        if (parser_1.isSelectorCallNode(item)) {
-            return _selectorCallSymbol(item, splittedText);
-        }
+    const astNodes = parser_1.flattenAndFilterAst(ast);
+    const requireAndImport = astNodes.filter(item => item && ['import', 'require'].indexOf(item.nodeName) >= 0);
+    const rawSymbols = astNodes.filter(item => item && ['media', 'keyframes', 'atrule', 'import', 'require', 'supports', 'literal'].indexOf(item.nodeName) === -1);
+    const importedSymbols = [];
+    requireAndImport.map((r) => {
+        const value = r.path.nodes[0].val;
+        const filePath = path.join(fileUri.fsPath, '..', value);
+        const fileContent = fs.readFileSync(filePath, { flag: 'r' }).toString();
+        const toImport = getAllSymbols(fileContent, currentWord, vscode_1.Uri.parse(filePath));
+        importedSymbols.push(...toImport);
     });
+    return [...importedSymbols, ...rawSymbols.map(item => {
+            if (parser_1.isVariableNode(item)) {
+                return _variableSymbol(item, splittedText, currentWord);
+            }
+            if (parser_1.isFunctionNode(item)) {
+                return _functionSymbol(item, splittedText);
+            }
+            if (parser_1.isSelectorNode(item)) {
+                return _selectorSymbol(item, splittedText, currentWord);
+            }
+            if (parser_1.isSelectorCallNode(item)) {
+                return _selectorCallSymbol(item, splittedText);
+            }
+        })];
 }
 exports.getAllSymbols = getAllSymbols;
 /**
@@ -200,12 +213,12 @@ class StylusCompletion {
         let symbols = [], atRules = [], properties = [], values = [];
         if (value) {
             values = getValues(cssSchema, currentWord);
-            symbols = utils_1.compact(getAllSymbols(text, currentWord)).filter(item => item.kind === vscode_1.CompletionItemKind.Variable);
+            symbols = utils_1.compact(getAllSymbols(text, currentWord, document.uri)).filter(item => item.kind === vscode_1.CompletionItemKind.Variable);
         }
         else {
             atRules = getAtRules(cssSchema, currentWord);
             properties = getProperties(cssSchema, currentWord, config.get('useSeparator', true));
-            symbols = utils_1.compact(getAllSymbols(text, currentWord));
+            symbols = utils_1.compact(getAllSymbols(text, currentWord, document.uri));
         }
         const completions = [].concat(symbols, atRules, properties, values, config.get('useBuiltinFunctions', true) ? built_in_1.default : []);
         return completions;
