@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.flattenAndFilterAst = exports.buildAst = exports.isColor = exports.isAtRuleNode = exports.isSelectorCallNode = exports.isSelectorNode = exports.isFunctionNode = exports.isVariableNode = void 0;
 const css_colors_list_1 = require("./css-colors-list");
 const stylus = require('stylus');
 /**

@@ -8,52 +8,53 @@ import { StylusDocumentSimbolsProvider } from './symbols-provider';
 import { activateColorDecorations } from './color-decorators';
 
 const DOCUMENT_SELECTOR = {
-  language: 'stylus',
-  scheme: 'file'
+	language: 'stylus',
+	scheme: 'file'
 };
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
-  const editorConfig = vscode.workspace.getConfiguration('editor');
-  console.log(editorConfig);
-  const config = vscode.workspace.getConfiguration('languageStylus');
-  const completionItemProvider = new CompletionProvider();
-  const completionProviderDisposable = vscode.languages
-    .registerCompletionItemProvider(DOCUMENT_SELECTOR, completionItemProvider, '\\.', '$', '-', '&', '@');
-  context.subscriptions.push(completionProviderDisposable);
+	const editorConfig = vscode.workspace.getConfiguration('editor');
+	console.log(editorConfig);
 
-  vscode.languages.setLanguageConfiguration('stylus', {
-    wordPattern: /(#?-?\d*\.\d\w*%?)|([$@#!.:]?[\w-?]+%?)|[$@#!.]/g,
-    onEnterRules: [
-      // Indent after .class_name, #id, @media, [attr=sddsf]
-      {
-        beforeText: /^([\s\/]?)+[\.#&@\[:].+[^,]$/gi,
-        action: { indentAction: vscode.IndentAction.Indent },
-      },
-      // Indent after &
-      {
-        beforeText: /\s&(.*)[^,]$|&$/gi,
-        action: { indentAction: vscode.IndentAction.Indent },
-      },
-      // Indent after keyfames e.g. 10%
-      {
-        beforeText: /^(\s?)+\d{1,3}%/gi,
-        action: { indentAction: vscode.IndentAction.Indent },
-      },
-      // Indent after keyfames e.g. 10%
-      {
-        beforeText: /^(\s?)+for.+in.+$/gi,
-        action: { indentAction: vscode.IndentAction.Indent },
-      }
-    ]
-  });
+	const config = vscode.workspace.getConfiguration('languageStylus');
+	const completionItemProvider = new CompletionProvider();
+	const completionProviderDisposable = vscode.languages
+		.registerCompletionItemProvider(DOCUMENT_SELECTOR, completionItemProvider, '\\.', '$', '-', '&', '@');
+	context.subscriptions.push(completionProviderDisposable);
 
-  const symbolsProvider = new StylusDocumentSimbolsProvider();
-  const symbolsProviderDisposable = vscode.languages.registerDocumentSymbolProvider(DOCUMENT_SELECTOR, symbolsProvider);
-  context.subscriptions.push(symbolsProviderDisposable);
+	vscode.languages.setLanguageConfiguration('stylus', {
+		wordPattern: /(#?-?\d*\.\d\w*%?)|([$@#!.:]?[\w-?]+%?)|[$@#!.]/g,
+		onEnterRules: [
+			// Indent after .class_name, #id, @media, [attr=sddsf]
+			{
+				beforeText: /^([\s\/]?)+[\.#&@\[:].+[^,]$/gi,
+				action: { indentAction: vscode.IndentAction.Indent },
+			},
+			// Indent after &
+			{
+				beforeText: /\s&(.*)[^,]$|&$/gi,
+				action: { indentAction: vscode.IndentAction.Indent },
+			},
+			// Indent after keyfames e.g. 10%
+			{
+				beforeText: /^(\s?)+\d{1,3}%/gi,
+				action: { indentAction: vscode.IndentAction.Indent },
+			},
+			// Indent after keyfames e.g. 10%
+			{
+				beforeText: /^(\s?)+for.+in.+$/gi,
+				action: { indentAction: vscode.IndentAction.Indent },
+			}
+		]
+	});
 
-  if (editorConfig.get('colorDecorators')) {
-    context.subscriptions.push(activateColorDecorations());
-  }
+	const symbolsProvider = new StylusDocumentSimbolsProvider();
+	const symbolsProviderDisposable = vscode.languages.registerDocumentSymbolProvider(DOCUMENT_SELECTOR, symbolsProvider);
+	context.subscriptions.push(symbolsProviderDisposable);
+
+	if (editorConfig.get('colorDecorators')) {
+		context.subscriptions.push(activateColorDecorations());
+	}
 }
