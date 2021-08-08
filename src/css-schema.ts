@@ -4,4 +4,4 @@
  *--------------------------------------------------------------------------------------------*/
 // file generated from css-schema.xml using css-exclude_generate_browserjs.js
 
-export { data } from 'vscode-css-languageservice/lib/umd/data/browsers';
+export { cssData } from 'vscode-css-languageservice/lib/umd/data/webCustomData';
