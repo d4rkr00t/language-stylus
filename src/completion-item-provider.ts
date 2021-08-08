@@ -65,7 +65,7 @@ export function getPropertyName(currentWord:string) : string {
  * @return {Object}
  */
 export function findPropertySchema(cssSchema, property:string) {
-  return cssSchema.data.css.properties.find(item => item.name === property);
+  return cssSchema.cssData.properties.find(item => item.name === property);
 }
 
 /**
@@ -175,7 +175,7 @@ export function getAllSymbols(text:string, currentWord:string) : CompletionItem[
 export function getAtRules(cssSchema, currentWord:string) : CompletionItem[] {
   if (!isAtRule(currentWord)) return [];
 
-  return cssSchema.data.css.atdirectives.map(property => {
+  return cssSchema.cssData.atdirectives.map(property => {
     const completionItem = new CompletionItem(property.name);
 
     completionItem.detail = property.desc;
@@ -194,7 +194,7 @@ export function getAtRules(cssSchema, currentWord:string) : CompletionItem[] {
 export function getProperties(cssSchema, currentWord:string, useSeparator:boolean) : CompletionItem[] {
   if (isClassOrId(currentWord) || isAtRule(currentWord)) return [];
 
-  return cssSchema.data.css.properties.map(property => {
+  return cssSchema.cssData.properties.map(property => {
     const completionItem = new CompletionItem(property.name);
 
     completionItem.insertText = property.name + (useSeparator ? ': ' : ' ');

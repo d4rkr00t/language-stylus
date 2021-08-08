@@ -3,5 +3,4 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
  
-export declare var data: any;
-export declare var descriptions: any;
+export declare var cssData: any;
