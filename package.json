@@ -89,7 +89,7 @@
         }
     },
     "dependencies": {
-        "stylus": "0.54.8",
+        "stylus": "^0.55.0",
         "vscode-css-languageservice": "^5.1.4"
     }
 }
