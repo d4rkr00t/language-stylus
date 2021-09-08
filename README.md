@@ -2,7 +2,7 @@
 
 ![Stylus](assets/icon.png)
 
-[![VSCode Marketplace Version](https://vsmarketplacebadge.apphb.com/version/sysoev.language-stylus.svg)](https://marketplace.visualstudio.com/items?itemName=sysoev.language-stylus)
+[![VSCode Marketplace Version](https://img.shields.io/visual-studio-marketplace/v/sysoev.language-stylus?label=VSCode%20Marketplace)](https://marketplace.visualstudio.com/items?itemName=sysoev.language-stylus)
 [![VSCode Marketplace Downloads](https://img.shields.io/visual-studio-marketplace/i/sysoev.language-stylus)](https://marketplace.visualstudio.com/items?itemName=sysoev.language-stylus)
 [![VSCode Marketplace Stars](https://img.shields.io/visual-studio-marketplace/r/sysoev.language-stylus)](https://marketplace.visualstudio.com/items?itemName=sysoev.language-stylus)
 [![github-issues](https://img.shields.io/github/issues/d4rkr00t/language-stylus.svg)](https://github.com/d4rkr00t/language-stylus/issues)
