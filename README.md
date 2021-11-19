@@ -32,6 +32,6 @@ Adds syntax highlighting and code completion to `Stylus` files in Visual Studio 
 }
 ```
 
-### TODO
-* Tags completion
-* SVG properties completion
+### Feature Request
+
+Missing your wanted feature ? Please report it via [github issues](https://github.com/d4rkr00t/language-stylus/issues)

@@ -1,4 +1,4 @@
-import { CompletionItem, CompletionItemKind } from 'vscode';
+import { CompletionItem, CompletionItemKind, SnippetString } from 'vscode';
 
 const builtIn = [
   {
@@ -354,7 +354,7 @@ const builtIn = [
   {
     "name": "lookup(name)",
     "desc": "Allows to lookup a variable with a given name, passed as a string. Returns null if the variable is undefined.",
-    "insertText": "lookup(name)"
+    "insertText": "lookup()"
   },
   {
     "name": "define(name, expr[, global])",
@@ -436,7 +436,7 @@ const builtIn = [
 export default builtIn.map((item) => {
   const completionItem = new CompletionItem(item.name);
   completionItem.detail = item.desc;
-  completionItem.insertText = item.insertText;
+  completionItem.insertText = new SnippetString(`${item.insertText.replace(")", "$0)")}`);
   completionItem.kind = CompletionItemKind.Function;
 
   return completionItem;

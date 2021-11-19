@@ -1,7 +1,8 @@
 import {
   CompletionItemProvider, CompletionItem, CompletionItemKind,
   TextDocument, Position, CancellationToken, Range,
-  workspace
+  workspace,
+  SnippetString
 } from 'vscode';
 
 import {
@@ -16,6 +17,7 @@ import {
 } from './utils';
 
 import * as cssSchema from './css-schema';
+import cssBuiltIn from './css-built-in';
 import builtIn from './built-in';
 import { getPropertyDescription } from './languageFacts';
 
@@ -221,6 +223,7 @@ export function getValues(cssSchema, currentWord:string) : CompletionItem[] {
     const completionItem = new CompletionItem(property.name);
 
     completionItem.detail = property.desc;
+    completionItem.insertText = new SnippetString(property.name.replace(")", "$0)"));
     completionItem.kind = CompletionItemKind.Value;
 
     return completionItem;
@@ -257,6 +260,7 @@ class StylusCompletion implements CompletionItemProvider {
       atRules,
       properties,
       values,
+      cssBuiltIn,
       config.get('useBuiltinFunctions', true) ? builtIn : []
     );
 
