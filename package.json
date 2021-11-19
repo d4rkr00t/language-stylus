@@ -1,13 +1,23 @@
 {
     "name": "language-stylus",
     "displayName": "stylus",
-    "description": "Stylus language support",
+    "description": "stylus language support",
     "version": "1.13.0",
     "publisher": "sysoev",
     "engines": {
         "vscode": "^1.59.0"
     },
     "license": "MIT",
+    "author": {
+        "name": "Stanislav Sysoev",
+        "email": "d4rkr00t@gmail.com"
+    },
+    "maintainers": [
+        {
+            "name": "Lei Chen",
+            "email": "chenleicoder@gmail.com"
+        }
+    ],
     "homepage": "https://github.com/d4rkr00t/language-stylus",
     "repository": {
         "type": "git",
@@ -19,6 +29,7 @@
     "keywords": [
         "vscode",
         "stylus",
+        "styl",
         "language-stylus",
         "vscode-stylus",
         "language-support",
@@ -90,6 +101,6 @@
     },
     "dependencies": {
         "stylus": "^0.55.0",
-        "vscode-css-languageservice": "^5.1.4"
+        "vscode-css-languageservice": "^5.1.8"
     }
 }
