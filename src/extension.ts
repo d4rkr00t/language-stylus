@@ -5,7 +5,7 @@ import * as vscode from 'vscode';
 
 import CompletionProvider from './completion-item-provider';
 import { StylusDocumentSimbolsProvider } from './symbols-provider';
-import { activateColorDecorations } from './color-decorators';
+import { StylusColorProvider } from './color-provider';
 
 const DOCUMENT_SELECTOR = {
   language: 'stylus',
@@ -49,11 +49,13 @@ export function activate(context: vscode.ExtensionContext) {
     ]
   });
 
+  // symbol
   const symbolsProvider = new StylusDocumentSimbolsProvider();
   const symbolsProviderDisposable = vscode.languages.registerDocumentSymbolProvider(DOCUMENT_SELECTOR, symbolsProvider);
   context.subscriptions.push(symbolsProviderDisposable);
 
-  if (editorConfig.get('colorDecorators')) {
-    context.subscriptions.push(activateColorDecorations());
-  }
+  // color
+  const colorProvider = new StylusColorProvider();
+  const colorProviderDisposable = vscode.languages.registerColorProvider(DOCUMENT_SELECTOR, colorProvider);
+  context.subscriptions.push(colorProviderDisposable);
 }
