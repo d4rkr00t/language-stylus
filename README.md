@@ -16,6 +16,7 @@ Adds syntax highlighting and code completion to `Stylus` files in Visual Studio 
 * Symbols provider
 * Completion for selectors, properties, values, variables, functions etc.
 * Color preview
+* Color picker
 
 ![Completion in Action](https://user-images.githubusercontent.com/14012511/142596271-9a31c14e-4df0-4b55-be9f-d0f28eba9a5d.gif)
 
