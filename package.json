@@ -2,7 +2,7 @@
     "name": "language-stylus",
     "displayName": "stylus",
     "description": "stylus language support",
-    "version": "1.13.0",
+    "version": "1.14.0",
     "publisher": "sysoev",
     "engines": {
         "vscode": "^1.59.0"
@@ -79,6 +79,7 @@
         }
     },
     "scripts": {
+        "build": "npx vsce package",
         "vscode:prepublish": "tsc -p ./",
         "compile": "tsc -watch -p ./",
         "patch": "vsce publish patch",
@@ -90,7 +91,8 @@
         "@types/vscode": "^1.59.0",
         "conventional-github-releaser": "^3.1.5",
         "cz-conventional-changelog": "^3.3.0",
-        "typescript": "^4.3.5"
+        "typescript": "^4.3.5",
+        "vsce": "^2.3.0"
     },
     "config": {
         "commitizen": {
