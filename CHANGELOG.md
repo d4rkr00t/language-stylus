@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - `var()` and `calc()` css builtin function autocomplete support
+- color picker support, to fix [#51](https://github.com/d4rkr00t/language-stylus/issues/51)
 
 ### Changed
 - Change `css function` automplete behavior, set cursor into the position between parens
