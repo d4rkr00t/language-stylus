@@ -41,30 +41,43 @@ export const getRealCallColumn = (textToSearch: string, text: string[], lineno: 
 
 export function normalizeColors(colorsNode: StylusNode[], text: string[]): ColorInformation[] {
   const colorsInformation = [];
+  const colorPosSet = new Set();
   colorsNode.forEach(color => {
     if (color.nodeName === 'ident' && colors[color.name]) {
       try {
         const colorObj = colorFromHex(colors[color.name]);
-        colorsInformation.push(new ColorInformation(
-          new Range(
-            new Position(color.lineno - 1, getRealColumn(color.name, text, color.lineno - 1)),
-            new Position(color.lineno - 1, getRealColumn(color.name, text, color.lineno - 1) + color.name?.length || 0)
-          ),
-          new Color(colorObj.red, colorObj.green, colorObj.blue, colorObj.alpha)
-        ));
+        const pos = `${color.lineno - 1}-${getRealColumn(color.name, text, color.lineno - 1)}`;
+        if (colorPosSet.has(pos)) {
+          // do nothing
+        } else {
+          colorPosSet.add(pos);
+          colorsInformation.push(new ColorInformation(
+            new Range(
+              new Position(color.lineno - 1, getRealColumn(color.name, text, color.lineno - 1)),
+              new Position(color.lineno - 1, getRealColumn(color.name, text, color.lineno - 1) + color.name?.length || 0)
+            ),
+            new Color(colorObj.red, colorObj.green, colorObj.blue, colorObj.alpha)
+          ));
+        }
       } catch (_) {
         // do nothing
       }
     } else if (color.nodeName === 'rgba') {
       try {
-        colorsInformation.push(new ColorInformation(
-          new Range(
-            new Position(color.lineno - 1, getRealColumn((color as any).raw, text, color.lineno - 1)),
-            new Position(color.lineno - 1, getRealColumn((color as any).raw, text, color.lineno - 1) + (color as any).raw?.length || 0)
-          ),
-          // @ts-ignore
-          new Color(color.r, color.g, color.b, color.a)
-        ));
+        const pos = `${color.lineno - 1}-${getRealColumn((color as any).raw, text, color.lineno - 1)}`;
+        if (colorPosSet.has(pos)) {
+          // do nothing
+        } else {
+          colorPosSet.add(pos);
+          colorsInformation.push(new ColorInformation(
+            new Range(
+              new Position(color.lineno - 1, getRealColumn((color as any).raw, text, color.lineno - 1)),
+              new Position(color.lineno - 1, getRealColumn((color as any).raw, text, color.lineno - 1) + (color as any).raw?.length || 0)
+            ),
+            // @ts-ignore
+            new Color(color.r, color.g, color.b, color.a)
+          ));
+        }
       } catch (_) {
         // do nothing
       }
@@ -77,39 +90,47 @@ export function normalizeColors(colorsNode: StylusNode[], text: string[]): Color
         }
         const alpha = colorValues.length === 4 ? getNumericValue(colorValues[3], 1) : 1;
         const funcName = color.name as string;
-        if (funcName === 'rgb' || funcName === 'rgba') {
-          colorsInformation.push(new ColorInformation(
-            new Range(
-              new Position(color.lineno - 1, getRealColumn(color.name, text, color.lineno - 1)),
-              new Position(color.lineno - 1, getRealCallColumn(color.name, text, color.lineno - 1))
-            ),
-            // @ts-ignore
-            new Color(
-              getNumericValue(colorValues[0], 255.0),
-              getNumericValue(colorValues[1], 255.0),
-              getNumericValue(colorValues[2], 255.0),
-              alpha
-            )
-          ));
-        } else if (funcName === 'hsl' || funcName === 'hsla') {
-          const h = getAngle(colorValues[0]);
-          const s = getNumericValue(colorValues[1], 100.0);
-          const l = getNumericValue(colorValues[2], 100.0);
-          const colorRes = colorFromHSL(h, s, l, alpha);
-          colorsInformation.push(new ColorInformation(
-            new Range(
-              new Position(color.lineno - 1, getRealColumn(color.name, text, color.lineno - 1)),
-              new Position(color.lineno - 1, getRealCallColumn(color.name, text, color.lineno - 1))
-            ),
-            new Color(colorRes.red, colorRes.green, colorRes.blue, colorRes.alpha)
-          ));
+
+        const pos = `${color.lineno - 1}-${getRealColumn(color.name, text, color.lineno - 1)}`;
+        if (colorPosSet.has(pos)) {
+          // do nothing
+        } else {
+          colorPosSet.add(pos);
+          if (funcName === 'rgb' || funcName === 'rgba') {
+            colorsInformation.push(new ColorInformation(
+              new Range(
+                new Position(color.lineno - 1, getRealColumn(color.name, text, color.lineno - 1)),
+                new Position(color.lineno - 1, getRealCallColumn(color.name, text, color.lineno - 1))
+              ),
+              // @ts-ignore
+              new Color(
+                getNumericValue(colorValues[0], 255.0),
+                getNumericValue(colorValues[1], 255.0),
+                getNumericValue(colorValues[2], 255.0),
+                alpha
+              )
+            ));
+          } else if (funcName === 'hsl' || funcName === 'hsla') {
+            const h = getAngle(colorValues[0]);
+            const s = getNumericValue(colorValues[1], 100.0);
+            const l = getNumericValue(colorValues[2], 100.0);
+            const colorRes = colorFromHSL(h, s, l, alpha);
+            colorsInformation.push(new ColorInformation(
+              new Range(
+                new Position(color.lineno - 1, getRealColumn(color.name, text, color.lineno - 1)),
+                new Position(color.lineno - 1, getRealCallColumn(color.name, text, color.lineno - 1))
+              ),
+              new Color(colorRes.red, colorRes.green, colorRes.blue, colorRes.alpha)
+            ));
+          } 
         }
       } catch (_) {
-        _;
         // do nothing
       }
     }
   });
+  // clear position set
+  colorPosSet.clear();
   return colorsInformation;
 }
 

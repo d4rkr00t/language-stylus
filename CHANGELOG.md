@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.14.1] - 2021-11-25
+### Fixed
+- Fix duplicated color preview square shown, close [#65](https://github.com/d4rkr00t/language-stylus/issues/65)
+
 ## [1.14.0] - 2021-11-22
 ### Fixed
 - Fix `css variables` and `at_rule` syntax highlight
