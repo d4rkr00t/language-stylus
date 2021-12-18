@@ -74,8 +74,15 @@ export function normalizeColors(colorsNode: StylusNode[], text: string[]): Color
               new Position(color.lineno - 1, getRealColumn((color as any).raw, text, color.lineno - 1)),
               new Position(color.lineno - 1, getRealColumn((color as any).raw, text, color.lineno - 1) + (color as any).raw?.length || 0)
             ),
-            // @ts-ignore
-            new Color(color.r, color.g, color.b, color.a)
+            new Color(
+              // @ts-ignore
+              getNumericValue(color.r, 255.0),
+              // @ts-ignore
+              getNumericValue(color.g, 255.0),
+              // @ts-ignore
+              getNumericValue(color.b, 255.0),
+              1
+            )
           ));
         }
       } catch (_) {
@@ -122,7 +129,7 @@ export function normalizeColors(colorsNode: StylusNode[], text: string[]): Color
               ),
               new Color(colorRes.red, colorRes.green, colorRes.blue, colorRes.alpha)
             ));
-          } 
+          }
         }
       } catch (_) {
         // do nothing
@@ -134,7 +141,7 @@ export function normalizeColors(colorsNode: StylusNode[], text: string[]): Color
   return colorsInformation;
 }
 
-export function extractColorsFromExpression(node:StylusValue) {
+export function extractColorsFromExpression(node: StylusValue) {
   let result = [];
 
   if (node.nodeName === 'expression') {
@@ -183,31 +190,31 @@ export class StylusColorProvider implements DocumentColorProvider {
       return [];
     }
     const result: ColorPresentation[] = [];
-		const red256 = Math.round(color.red * 255), green256 = Math.round(color.green * 255), blue256 = Math.round(color.blue * 255);
+    const red256 = Math.round(color.red * 255), green256 = Math.round(color.green * 255), blue256 = Math.round(color.blue * 255);
 
-		let label;
-		if (color.alpha === 1) {
-			label = `rgb(${red256}, ${green256}, ${blue256})`;
-		} else {
-			label = `rgba(${red256}, ${green256}, ${blue256}, ${color.alpha})`;
-		}
-		result.push({ label: label, textEdit: TextEdit.replace(context.range, label) });
+    let label;
+    if (color.alpha === 1) {
+      label = `rgb(${red256}, ${green256}, ${blue256})`;
+    } else {
+      label = `rgba(${red256}, ${green256}, ${blue256}, ${color.alpha})`;
+    }
+    result.push({ label: label, textEdit: TextEdit.replace(context.range, label) });
 
-		if (color.alpha === 1) {
-			label = `#${toTwoDigitHex(red256)}${toTwoDigitHex(green256)}${toTwoDigitHex(blue256)}`;
-		} else {
-			label = `#${toTwoDigitHex(red256)}${toTwoDigitHex(green256)}${toTwoDigitHex(blue256)}${toTwoDigitHex(Math.round(color.alpha * 255))}`;
-		}
-		result.push({ label: label, textEdit: TextEdit.replace(context.range, label) });
+    if (color.alpha === 1) {
+      label = `#${toTwoDigitHex(red256)}${toTwoDigitHex(green256)}${toTwoDigitHex(blue256)}`;
+    } else {
+      label = `#${toTwoDigitHex(red256)}${toTwoDigitHex(green256)}${toTwoDigitHex(blue256)}${toTwoDigitHex(Math.round(color.alpha * 255))}`;
+    }
+    result.push({ label: label, textEdit: TextEdit.replace(context.range, label) });
 
-		const hsl = hslFromColor(color);
-		if (hsl.a === 1) {
-			label = `hsl(${hsl.h}, ${Math.round(hsl.s * 100)}%, ${Math.round(hsl.l * 100)}%)`;
-		} else {
-			label = `hsla(${hsl.h}, ${Math.round(hsl.s * 100)}%, ${Math.round(hsl.l * 100)}%, ${hsl.a})`;
-		}
-		result.push({ label: label, textEdit: TextEdit.replace(context.range, label) });
+    const hsl = hslFromColor(color);
+    if (hsl.a === 1) {
+      label = `hsl(${hsl.h}, ${Math.round(hsl.s * 100)}%, ${Math.round(hsl.l * 100)}%)`;
+    } else {
+      label = `hsla(${hsl.h}, ${Math.round(hsl.s * 100)}%, ${Math.round(hsl.l * 100)}%, ${hsl.a})`;
+    }
+    result.push({ label: label, textEdit: TextEdit.replace(context.range, label) });
 
-		return result;
+    return result;
   }
 }
