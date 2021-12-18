@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.15.0] - 2021-12-18
+### Fixed
+- Fix color preview not functioning properly when using hex values, close [#96](https://github.com/d4rkr00t/language-stylus/issues/96)
+- Upgrade `stylus` and `vscode-css-languageservice` to latest version
+
 ## [1.14.1] - 2021-11-25
 ### Fixed
 - Fix duplicated color preview square shown, close [#65](https://github.com/d4rkr00t/language-stylus/issues/65)
