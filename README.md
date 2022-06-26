@@ -1,8 +1,8 @@
 # vscode-stylus
 
+[![Github Actions](https://github.com/d4rkr00t/language-stylus/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/d4rkr00t/language-stylus/actions?query=workflow%3ACI+)
 [![VSCode Marketplace Version](https://img.shields.io/visual-studio-marketplace/v/sysoev.language-stylus?label=VSCode%20Marketplace)](https://marketplace.visualstudio.com/items?itemName=sysoev.language-stylus)
 [![VSCode Marketplace Installs](https://img.shields.io/visual-studio-marketplace/i/sysoev.language-stylus)](https://marketplace.visualstudio.com/items?itemName=sysoev.language-stylus)
-[![VSCode Marketplace Downloads](https://img.shields.io/visual-studio-marketplace/d/sysoev.language-stylus)](https://marketplace.visualstudio.com/items?itemName=sysoev.language-stylus)
 [![VSCode Marketplace Stars](https://img.shields.io/visual-studio-marketplace/r/sysoev.language-stylus)](https://marketplace.visualstudio.com/items?itemName=sysoev.language-stylus)
 [![github-issues](https://img.shields.io/github/issues/d4rkr00t/language-stylus.svg)](https://github.com/d4rkr00t/language-stylus/issues)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/d4rkr00t/language-stylus/pulls)
