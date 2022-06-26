@@ -6,6 +6,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.16.0] - 2022-06-26
+### Changed
+- Add github actions ci
+- Add [sponsor link](http://opencollective.com/stylus) for stylus project
+- Bump `stylus` to `v0.58.1`
+- Bump `vscode-css-languageservice` to `v6.0.1`
+- Bump `vsce` to `v2.9.2`
+- Bump `typescript` to `v4.7.4`
+- Drop `conventional-github-releaser` and `cz-conventional-changelog`
+
 ## [1.15.0] - 2021-12-18
 ### Fixed
 - Fix color preview not functioning properly when using hex values, close [#96](https://github.com/d4rkr00t/language-stylus/issues/96)
