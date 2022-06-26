@@ -1,0 +1,25 @@
+# Github actions workflow name
+name: CI
+
+# Triggers the workflow on push or pull request events
+on:
+  push:
+    branches: [main, master]
+    tags: ['**']
+  pull_request:
+
+jobs:
+  build-extension:
+    name: 'Try build extension via vsce'
+    runs-on: ubuntu-latest
+    steps:
+     - uses: actions/checkout@v3
+     - uses: actions/setup-node@v3
+       with:
+         node-version: '18'
+     - name: Install npm dependencies
+       run: npm install
+     - name: Print put node & npm version
+       run: node --version && npm --version 
+     - name: Run Build
+       run: npm run build

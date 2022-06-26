@@ -7,14 +7,13 @@
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
-        "--disable-extensions",
+				"--disable-extensions",
 				"--extensionDevelopmentPath=${workspaceFolder}"
 			],
 			"outFiles": [
 				"${workspaceFolder}/out/**/*.js"
 			],
-      "stopOnEntry": false,
-      "sourceMaps": true,
+			"sourceMaps": true,
 			"preLaunchTask": "${defaultBuildTask}"
 		},
 		{
@@ -22,15 +21,14 @@
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
-        "--disable-extensions",
+				"--disable-extensions",
 				"--extensionDevelopmentPath=${workspaceFolder}",
 				"--extensionTestsPath=${workspaceFolder}/out/test/suite/index"
 			],
 			"outFiles": [
 				"${workspaceFolder}/out/test/**/*.js"
 			],
-      "stopOnEntry": false,
-      "sourceMaps": true,
+			"sourceMaps": true,
 			"preLaunchTask": "npm"
 		}
 	]
