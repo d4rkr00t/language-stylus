@@ -1,5 +1,5 @@
 export default [
-  'aliceblue',
+  	'aliceblue',
 	'antiquewhite',
 	'aqua',
 	'aquamarine',
