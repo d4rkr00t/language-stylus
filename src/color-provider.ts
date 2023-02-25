@@ -91,7 +91,12 @@ export function normalizeColors(colorsNode: StylusNode[], text: string[]): Color
     } else if (color.nodeName === 'call') {
       try {
         // @ts-ignore
-        const colorValues = color?.args?.nodes?.map?.(node => node.nodes[0].val);
+        const cValues = color?.args?.nodes?.length > 1
+          // @ts-ignore
+          ? color?.args?.nodes?.map?.((node: any) => node.nodes[0].val)
+          // @ts-ignore
+          : color?.args?.nodes[0]?.nodes?.map?.((node: any) => node.val);
+        const colorValues = cValues;
         if (!colorValues || colorValues.length < 3 || colorValues.length > 4) {
           return;
         }
