@@ -1,225 +1,269 @@
 import {
-  CancellationToken,
-  Color,
-  ColorInformation,
-  ColorPresentation,
-  DocumentColorProvider,
-  Position,
-  ProviderResult,
-  Range,
-  TextDocument,
-  TextEdit
+	CancellationToken,
+	Color,
+	ColorInformation,
+	ColorPresentation,
+	DocumentColorProvider,
+	Position,
+	ProviderResult,
+	Range,
+	TextDocument,
+	TextEdit
 } from 'vscode';
-
 import {
-  StylusNode,
-  StylusValue,
-  buildAst, flattenAndFilterAst,
-  isColor
+	StylusNode,
+	StylusValue,
+	buildAst, flattenAndFilterAst,
+	isColor
 } from './parser';
 import {
-  colors,
-  colorFromHex,
-  getNumericValue,
-  getAngle,
-  toTwoDigitHex,
-  colorFromHSL,
-  hslFromColor
+	colors,
+	colorFromHex,
+	getNumericValue,
+	getAngle,
+	toTwoDigitHex,
+	colorFromHSL,
+	hslFromColor
 } from './colors';
+import cssColors from './css-colors-list';
 
 export const buildCallValueFromArgs = args =>
-  args.nodes.map(node => node.nodes[0].val).join(', ');
+	args.nodes.map(node => node.nodes[0].val).join(', ');
 
 export const getRealColumn = (textToSearch: string, text: string[], lineno: number) =>
-  Math.max(text[lineno].indexOf(textToSearch), 0);
+	Math.max(text[lineno].indexOf(textToSearch), 0);
 
-export const getRealCallColumn = (textToSearch: string, text: string[], lineno: number) => {
-  const startPos = Math.max(text[lineno].indexOf(textToSearch), 0);
-  const searchStr = text[lineno].slice(startPos);
-  return Math.max(text[lineno].indexOf(textToSearch), 0) + searchStr.indexOf(")") + 1;
+export const getRealCallColumn = (search: string, text: string[], lineno: number) => {
+	const startPos = Math.max(text[lineno].indexOf(search), 0);
+	const searchStr = text[lineno].slice(startPos);
+	return Math.max(text[lineno].indexOf(search), 0) + searchStr.indexOf(")") + 1;
 }
 
-export function normalizeColors(colorsNode: StylusNode[], text: string[]): ColorInformation[] {
-  const colorsInformation = [];
-  const colorPosSet = new Set();
-  colorsNode.forEach(color => {
-    if (color.nodeName === 'ident' && colors[color.name]) {
-      try {
-        const colorObj = colorFromHex(colors[color.name]);
-        const pos = `${color.lineno - 1}-${getRealColumn(color.name, text, color.lineno - 1)}`;
-        if (colorPosSet.has(pos)) {
-          // do nothing
-        } else {
-          colorPosSet.add(pos);
-          colorsInformation.push(new ColorInformation(
-            new Range(
-              new Position(color.lineno - 1, getRealColumn(color.name, text, color.lineno - 1)),
-              new Position(color.lineno - 1, getRealColumn(color.name, text, color.lineno - 1) + color.name?.length || 0)
-            ),
-            new Color(colorObj.red, colorObj.green, colorObj.blue, colorObj.alpha)
-          ));
-        }
-      } catch (_) {
-        // do nothing
-      }
-    } else if (color.nodeName === 'rgba') {
-      try {
-        const pos = `${color.lineno - 1}-${getRealColumn((color as any).raw, text, color.lineno - 1)}`;
-        if (colorPosSet.has(pos)) {
-          // do nothing
-        } else {
-          colorPosSet.add(pos);
-          colorsInformation.push(new ColorInformation(
-            new Range(
-              new Position(color.lineno - 1, getRealColumn((color as any).raw, text, color.lineno - 1)),
-              new Position(color.lineno - 1, getRealColumn((color as any).raw, text, color.lineno - 1) + (color as any).raw?.length || 0)
-            ),
-            new Color(
-              // @ts-ignore
-              getNumericValue(color.r, 255.0),
-              // @ts-ignore
-              getNumericValue(color.g, 255.0),
-              // @ts-ignore
-              getNumericValue(color.b, 255.0),
-              1
-            )
-          ));
-        }
-      } catch (_) {
-        // do nothing
-      }
-    } else if (color.nodeName === 'call') {
-      try {
-        // @ts-ignore
-        const cValues = color?.args?.nodes?.length > 1
-          // @ts-ignore
-          ? color?.args?.nodes?.map?.((node: any) => node.nodes[0].val)
-          // @ts-ignore
-          : color?.args?.nodes[0]?.nodes?.map?.((node: any) => node.val);
-        const colorValues = cValues;
-        if (!colorValues || colorValues.length < 3 || colorValues.length > 4) {
-          return;
-        }
-        const alpha = colorValues.length === 4 ? getNumericValue(colorValues[3], 1) : 1;
-        const funcName = color.name as string;
+export function normalizeColors(colorsNode: oColor[], text: string[]): ColorInformation[] {
+	const colorInfo: ColorInformation[] = [];
+	const colorPosistion = new Set();
 
-        const pos = `${color.lineno - 1}-${getRealColumn(color.name, text, color.lineno - 1)}`;
-        if (colorPosSet.has(pos)) {
-          // do nothing
-        } else {
-          colorPosSet.add(pos);
-          if (funcName === 'rgb' || funcName === 'rgba') {
-            colorsInformation.push(new ColorInformation(
-              new Range(
-                new Position(color.lineno - 1, getRealColumn(color.name, text, color.lineno - 1)),
-                new Position(color.lineno - 1, getRealCallColumn(color.name, text, color.lineno - 1))
-              ),
-              // @ts-ignore
-              new Color(
-                getNumericValue(colorValues[0], 255.0),
-                getNumericValue(colorValues[1], 255.0),
-                getNumericValue(colorValues[2], 255.0),
-                alpha
-              )
-            ));
-          } else if (funcName === 'hsl' || funcName === 'hsla') {
-            const h = getAngle(colorValues[0]);
-            const s = getNumericValue(colorValues[1], 100.0);
-            const l = getNumericValue(colorValues[2], 100.0);
-            const colorRes = colorFromHSL(h, s, l, alpha);
-            colorsInformation.push(new ColorInformation(
-              new Range(
-                new Position(color.lineno - 1, getRealColumn(color.name, text, color.lineno - 1)),
-                new Position(color.lineno - 1, getRealCallColumn(color.name, text, color.lineno - 1))
-              ),
-              new Color(colorRes.red, colorRes.green, colorRes.blue, colorRes.alpha)
-            ));
-          }
-        }
-      } catch (_) {
-        // do nothing
-      }
-    }
-  });
-  // clear position set
-  colorPosSet.clear();
-  return colorsInformation;
+	colorsNode.forEach(node => {
+		const pos = `${node.lineno}-${node.column}`;
+
+		if (!colorPosistion.has(pos) && node.type === 'string' && colors[node.name]) {
+			colorPosistion.add(pos);
+			const positionStart = new Position(node.lineno, node.column);
+			const positionEnd = new Position(node.lineno, node.column + node.raw.length);
+			const c = colorFromHex(colors[node.name]);
+
+			colorInfo.push(new ColorInformation(
+				new Range(positionStart, positionEnd),
+				new Color(c.red, c.green, c.blue, c.alpha)
+			));
+		} else if (!colorPosistion.has(pos) && node.type === 'rgba') {
+			colorPosistion.add(pos);
+			const positionStart = new Position(node.lineno, node.column);
+			const positionEnd = new Position(node.lineno, node.column + node.raw.length);
+			const [red, green, blue, alpha] = node.color.map((el, idx, arr) => {
+				if (idx < arr.length - 1) {
+					return getNumericValue(el, 255);
+				}
+				return el;
+			});
+
+			colorInfo.push(new ColorInformation(
+				new Range(positionStart, positionEnd),
+				new Color(red, green, blue, alpha)
+			));
+		} else if (!colorPosistion.has(pos) && node.type === 'func-color') {
+			colorPosistion.add(pos);
+			const positionStart = new Position(node.lineno, node.column);
+			const positionEnd = new Position(node.lineno, getRealCallColumn(node.name, text, node.lineno));
+
+			if (['rgb', 'rgba'].find((el) => el === node.name)) {
+				const [red, green, blue, alpha] = node.color.map((el, idx, arr) => {
+					if (idx < arr.length - 1) {
+						return getNumericValue(el[0], 255);
+					}
+					return el[0];
+				});
+
+				colorInfo.push(new ColorInformation(
+					new Range(positionStart, positionEnd),
+					new Color(red, green, blue, alpha)
+				));
+			} else if (['hsl', 'hsla'].find((el) => el === node.name)) {
+				const [hue, sat, light, alpha] = node.color.map((el, idx) => {
+					let val: any;
+					switch (idx) {
+						case 0:
+							val = getAngle(el[0]);
+							break;
+						case 1:
+						case 2:
+							val = getNumericValue(el[0], 100.0);
+							break;
+						default:
+							val = el[0];
+							break;
+					}
+					return val;
+				});
+				const colorRes = colorFromHSL(hue, sat, light, alpha);
+
+				colorInfo.push(new ColorInformation(
+					new Range(positionStart, positionEnd),
+					new Color(colorRes.red, colorRes.green, colorRes.blue, colorRes.alpha)
+				));
+			}
+		}
+	});
+	// clear 'Set' position.
+	colorPosistion.clear();
+	return colorInfo;
 }
 
-export function extractColorsFromExpression(node: StylusValue) {
-  let result = [];
-
-  if (node.nodeName === 'expression') {
-    node.nodes.forEach(valNode => {
-      if (isColor(valNode)) {
-        result.push(valNode);
-      } else if (valNode.nodeName === 'object') {
-        Object.keys(valNode.vals).forEach(subValNode => {
-          result = result.concat(extractColorsFromExpression(valNode.vals[subValNode]));
-        });
-      }
-    })
-  }
-
-  return result;
+interface oColor {
+	type: string,
+	nodeName: string,
+	name: string,
+	color: any[],
+	column: number,
+	lineno: number,
+	raw: string | null
 }
 
-export function getColors(ast) {
-  return (ast.nodes || ast || []).reduce((acc, node) => {
-    if (node.nodeName === 'ident') {
-      acc = acc.concat(extractColorsFromExpression(node.val));
-    }
+export function extractColors(lines: any): any[] {
+	let result = [];
+	const innerExtractColors = (node: any): void => {
+		if (node.nodeName === 'expression') {
+			node.nodes.forEach((val: any) => {
+				if (val.nodeName === 'ident' && cssColors.indexOf(val.name) >= 0) {
+					let objColor: oColor = {
+						type: 'string',
+						nodeName: val.nodeName,
+						name: val.name,
+						color: [], // TODO: Add 'string' to 'rgba' function later
+						column: val.column - 1,
+						lineno: val.lineno - 1,
+						raw: val.string
+					};
+					result.push(objColor);
+				} else if (val.nodeName === 'rgba') {
+					let objColor: oColor = {
+						type: 'rgba',
+						nodeName: val.nodeName,
+						name: val.name,
+						color: [val.r, val.g, val.b, val.a],
+						column: val.column - 1,
+						lineno: val.lineno - 1,
+						raw: val.raw
+					};
+					result.push(objColor);
+				} else if (val.nodeName === 'call') {
+					const callNodes = [...val.args.nodes];
+					const hasOnlyUnits = (): boolean => {
+						if (callNodes.length === 1) {
+							return callNodes[0].nodes.every((v: any) => v.nodeName === 'unit');
+						}
+						return callNodes.every((v: any) => v.nodes[0].nodeName === 'unit');
+					};
 
-    if (node.nodeName === 'property' && node.expr) {
-      acc = acc.concat(extractColorsFromExpression(node.expr));
-    }
+					if (hasOnlyUnits()) {
+						const colorUnits = (): any[] => {
+							if (callNodes.length === 1) {
+								return callNodes[0].nodes.map((v: any) => {
+									return [v.val, v.type];
+								});
+							}
+							return callNodes.map((v: any) => {
+								return [v.nodes[0].val, v.nodes[0].type];
+							});
+						}
 
-    return acc;
-  }, []);
+						let colorVals = colorUnits().length === 3 ? colorUnits().concat([[1, undefined]]) : colorUnits();
+						let objColor: oColor = {
+							type: 'func-color',
+							nodeName: val.nodeName,
+							name: val.name,
+							color: colorVals,
+							column: val.column - 1,
+							lineno: val.lineno - 1,
+							raw: null
+						};
+						result.push(objColor);
+					} else {
+						for (let i = 0; i < callNodes.length; i++) {
+							const nodeElement = callNodes[i];
+							innerExtractColors(nodeElement);
+						}
+					}
+				} else if (val.nodeName === 'object') {
+					Object.keys(val.vals).forEach(oNode => {
+						result = result.concat(innerExtractColors(val.vals[oNode]));
+					});
+				}
+			});
+		}
+	};
+	innerExtractColors(lines);
+
+	return result.filter((v: any) => v !== undefined);
+}
+
+export function getColorsLines(ast: any): any[] {
+	return (ast.nodes || ast || []).reduce((acc: any[], node: any) => {
+		if (node.nodeName === 'ident') {
+			acc = acc.concat(extractColors(node.val));
+		} else if (node.nodeName === 'property' && node.expr) {
+			acc = acc.concat(extractColors(node.expr));
+		} else if (node.nodeName === 'ternary' && node.falseExpr) {
+			acc = acc.concat(extractColors(node.falseExpr.val));
+		}
+
+		return acc;
+	}, []);
 }
 
 export class StylusColorProvider implements DocumentColorProvider {
 
-  provideDocumentColors(document: TextDocument, token: CancellationToken): ProviderResult<ColorInformation[]> {
-    if (token.isCancellationRequested) {
-      return [];
-    }
-    const documentTxt = document.getText();
-    const ast = flattenAndFilterAst(buildAst(documentTxt));
-    const list = normalizeColors(getColors(ast), documentTxt.split('\n'));
-    return list;
-  }
+	provideDocumentColors(document: TextDocument, token: CancellationToken): ProviderResult<ColorInformation[]> {
+		if (token.isCancellationRequested) {
+			return [];
+		}
+		const documentTxt = document.getText();
+		const ast = flattenAndFilterAst(buildAst(documentTxt));
+		const colorLines = getColorsLines(ast);
+		const list = normalizeColors(colorLines, documentTxt.split('\n'));
+		return new Promise(resolve => { resolve(list); });
+	}
 
-  provideColorPresentations(color: Color, context: { document: TextDocument; range: Range; }, token: CancellationToken): ProviderResult<ColorPresentation[]> {
-    if (token.isCancellationRequested) {
-      return [];
-    }
-    const result: ColorPresentation[] = [];
-    const red256 = Math.round(color.red * 255), green256 = Math.round(color.green * 255), blue256 = Math.round(color.blue * 255);
+	provideColorPresentations(color: Color, context: { document: TextDocument; range: Range; }, token: CancellationToken): ProviderResult<ColorPresentation[]> {
+		if (token.isCancellationRequested) {
+			return [];
+		}
+		const result: ColorPresentation[] = [];
+		const red256 = Math.round(color.red * 255), green256 = Math.round(color.green * 255), blue256 = Math.round(color.blue * 255);
 
-    let label;
-    if (color.alpha === 1) {
-      label = `rgb(${red256}, ${green256}, ${blue256})`;
-    } else {
-      label = `rgba(${red256}, ${green256}, ${blue256}, ${color.alpha})`;
-    }
-    result.push({ label: label, textEdit: TextEdit.replace(context.range, label) });
+		let label;
+		if (color.alpha === 1) {
+			label = `rgb(${red256}, ${green256}, ${blue256})`;
+		} else {
+			label = `rgba(${red256}, ${green256}, ${blue256}, ${color.alpha})`;
+		}
+		result.push({ label: label, textEdit: TextEdit.replace(context.range, label) });
 
-    if (color.alpha === 1) {
-      label = `#${toTwoDigitHex(red256)}${toTwoDigitHex(green256)}${toTwoDigitHex(blue256)}`;
-    } else {
-      label = `#${toTwoDigitHex(red256)}${toTwoDigitHex(green256)}${toTwoDigitHex(blue256)}${toTwoDigitHex(Math.round(color.alpha * 255))}`;
-    }
-    result.push({ label: label, textEdit: TextEdit.replace(context.range, label) });
+		if (color.alpha === 1) {
+			label = `#${toTwoDigitHex(red256)}${toTwoDigitHex(green256)}${toTwoDigitHex(blue256)}`;
+		} else {
+			label = `#${toTwoDigitHex(red256)}${toTwoDigitHex(green256)}${toTwoDigitHex(blue256)}${toTwoDigitHex(Math.round(color.alpha * 255))}`;
+		}
+		result.push({ label: label, textEdit: TextEdit.replace(context.range, label) });
 
-    const hsl = hslFromColor(color);
-    if (hsl.a === 1) {
-      label = `hsl(${hsl.h}, ${Math.round(hsl.s * 100)}%, ${Math.round(hsl.l * 100)}%)`;
-    } else {
-      label = `hsla(${hsl.h}, ${Math.round(hsl.s * 100)}%, ${Math.round(hsl.l * 100)}%, ${hsl.a})`;
-    }
-    result.push({ label: label, textEdit: TextEdit.replace(context.range, label) });
+		const hsl = hslFromColor(color);
+		if (hsl.a === 1) {
+			label = `hsl(${hsl.h}, ${Math.round(hsl.s * 100)}%, ${Math.round(hsl.l * 100)}%)`;
+		} else {
+			label = `hsla(${hsl.h}, ${Math.round(hsl.s * 100)}%, ${Math.round(hsl.l * 100)}%, ${hsl.a})`;
+		}
+		result.push({ label: label, textEdit: TextEdit.replace(context.range, label) });
 
-    return result;
-  }
+		return result;
+	}
 }
