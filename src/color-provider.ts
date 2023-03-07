@@ -11,10 +11,7 @@ import {
 	TextEdit
 } from 'vscode';
 import {
-	StylusNode,
-	StylusValue,
-	buildAst, flattenAndFilterAst,
-	isColor
+	buildAst, flattenAndFilterAst
 } from './parser';
 import {
 	colors,
@@ -27,17 +24,19 @@ import {
 } from './colors';
 import cssColors from './css-colors-list';
 
-export const buildCallValueFromArgs = args =>
-	args.nodes.map(node => node.nodes[0].val).join(', ');
-
-export const getRealColumn = (textToSearch: string, text: string[], lineno: number) =>
-	Math.max(text[lineno].indexOf(textToSearch), 0);
-
-export const getRealCallColumn = (search: string, text: string[], lineno: number) => {
-	const startPos = Math.max(text[lineno].indexOf(search), 0);
-	const searchStr = text[lineno].slice(startPos);
-	return Math.max(text[lineno].indexOf(search), 0) + searchStr.indexOf(")") + 1;
+function Column(search: string, text: string[], lineno: number) {
+	this.textLine = text[lineno];
+	this.search = search;
+	this.max = Math.max(this.textLine.indexOf(this.search), 0);
 }
+
+Column.prototype.real = function () {
+	return this.max;
+};
+
+Column.prototype.call = function () {
+	return this.max + this.textLine.slice(this.max).indexOf(')') + 1;
+};
 
 export function normalizeColors(colorsNode: oColor[], text: string[]): ColorInformation[] {
 	const colorInfo: ColorInformation[] = [];
@@ -48,8 +47,8 @@ export function normalizeColors(colorsNode: oColor[], text: string[]): ColorInfo
 
 		if (!colorPosistion.has(pos) && node.type === 'string' && colors[node.name]) {
 			colorPosistion.add(pos);
-			const positionStart = new Position(node.lineno, node.column);
-			const positionEnd = new Position(node.lineno, node.column + node.raw.length);
+			const positionStart = new Position(node.lineno, new Column(node.name, text, node.lineno).real());
+			const positionEnd = new Position(node.lineno, new Column(node.name, text, node.lineno).real() + node.raw.length);
 			const c = colorFromHex(colors[node.name]);
 
 			colorInfo.push(new ColorInformation(
@@ -58,8 +57,8 @@ export function normalizeColors(colorsNode: oColor[], text: string[]): ColorInfo
 			));
 		} else if (!colorPosistion.has(pos) && node.type === 'rgba') {
 			colorPosistion.add(pos);
-			const positionStart = new Position(node.lineno, node.column);
-			const positionEnd = new Position(node.lineno, node.column + node.raw.length);
+			const positionStart = new Position(node.lineno, new Column(node.raw, text, node.lineno).real());
+			const positionEnd = new Position(node.lineno, new Column(node.raw, text, node.lineno).real() + node.raw.length);
 			const [red, green, blue, alpha] = node.color.map((el, idx, arr) => {
 				if (idx < arr.length - 1) {
 					return getNumericValue(el, 255);
@@ -73,8 +72,8 @@ export function normalizeColors(colorsNode: oColor[], text: string[]): ColorInfo
 			));
 		} else if (!colorPosistion.has(pos) && node.type === 'func-color') {
 			colorPosistion.add(pos);
-			const positionStart = new Position(node.lineno, node.column);
-			const positionEnd = new Position(node.lineno, getRealCallColumn(node.name, text, node.lineno));
+			const positionStart = new Position(node.lineno, new Column(node.name, text, node.lineno).real());
+			const positionEnd = new Position(node.lineno, new Column(node.name, text, node.lineno).call());
 
 			if (['rgb', 'rgba'].find((el) => el === node.name)) {
 				const [red, green, blue, alpha] = node.color.map((el, idx, arr) => {

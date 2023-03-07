@@ -251,6 +251,7 @@ export function colorFromHSL(hue: number, sat: number, light: number, alpha: num
 		};
 		const t2 = light <= 0.5 ? (light * (sat + 1)) : (light + sat - (light * sat));
 		const t1 = light * 2 - t2;
+		// return new Color(hueToRgb(t1, t2, hue + 2), hueToRgb(t1, t2, hue), hueToRgb(t1, t2, hue - 2), alpha);
 		return { red: hueToRgb(t1, t2, hue + 2), green: hueToRgb(t1, t2, hue), blue: hueToRgb(t1, t2, hue - 2), alpha };
 	}
 }
