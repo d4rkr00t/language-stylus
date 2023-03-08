@@ -44,26 +44,26 @@
     ],
     "contributes": {
         "languages": [
-            {
-                "id": "stylus",
-                "aliases": [
-                    "Stylus",
-                    "stylus"
-                ],
-                "extensions": [
-                    ".styl",
-                    ".stylus"
-                ],
-                "configuration": "./stylus.configuration.json"
-            }
-        ],
-        "grammars": [
-            {
-                "language": "stylus",
-                "scopeName": "source.stylus",
-                "path": "./syntaxes/stylus.json"
-            }
-        ],
+			{
+				"id": "stylus",
+				"aliases": [
+					"Stylus",
+					"stylus"
+				],
+				"extensions": [
+					".styl",
+					".stylus"
+				],
+				"configuration": "./language-configuration.json"
+			}
+		],
+		"grammars": [
+			{
+				"language": "stylus",
+				"scopeName": "source.css.stylus",
+				"path": "./syntaxes/stylus.tmLanguage.json"
+			}
+		],
         "configuration": {
             "type": "object",
             "title": "Language Stylus Configuration",
