@@ -1,4 +1,23 @@
-import { Color } from 'vscode';
+export interface ColorRGBA {
+	red: number,
+	green: number,
+	blue: number,
+	alpha: number
+}
+
+export interface ColorHSLA {
+	h: number,
+	s: number,
+	l: number,
+	a: number
+}
+
+export interface ColorHWBA {
+	h: number,
+	w: number,
+	b: number,
+	a: number
+}
 
 export const colors: { [name: string]: string } = {
 	aliceblue: '#f0f8ff',
@@ -151,8 +170,13 @@ export const colors: { [name: string]: string } = {
 	yellowgreen: '#9acd32'
 };
 
-export function getNumericValue(val: any, factor: number) {
-	const m = String(val).match(/^([-+]?[0-9]*\.?[0-9]+)(%?)$/);
+export function hasColorName(v: string): boolean {
+	return colors.hasOwnProperty(v);
+}
+
+export function getNumericValue(node: string, factor: number): number {
+	const val = String(node);
+	const m = val.match(/^([-+]?[0-9]*\.?[0-9]+)(%?)$/);
 	if (m) {
 		if (m[2]) {
 			factor = 100.0;
@@ -165,14 +189,34 @@ export function getNumericValue(val: any, factor: number) {
 	throw new Error();
 }
 
-export function getAngle(val: any) {
-	const m = String(val).match(/^([-+]?[0-9]*\.?[0-9]+)(deg)?$/);
+export function getAngle(node: string): number {
+	const val = String(node);
+	const m = val.match(/^([-+]?[0-9]*\.?[0-9]+)(deg|rad|grad|turn)?$/);
 	if (m) {
-		return parseFloat(val) % 360;
-	} else if (Number(val)) {
-		return Number(val);
+		switch (m[2]) {
+			case 'deg':
+				return parseFloat(val) % 360;
+			case 'rad':
+				return (parseFloat(val) * 180 / Math.PI) % 360;
+			case 'grad':
+				return (parseFloat(val) * 0.9) % 360;
+			case 'turn':
+				return (parseFloat(val) * 360) % 360;
+			default:
+				if ('undefined' === typeof m[2]) {
+					return parseFloat(val) % 360;
+				}
+		}
 	}
 	throw new Error();
+}
+
+export function isColorConstructor(node: string) {
+	const name = node;
+	if (!name) {
+		return false;
+	}
+	return /^(rgb|rgba|hsl|hsla|hwb)$/gi.test(name);
 }
 
 const Digit0 = 48;
@@ -198,7 +242,7 @@ export function hexDigit(charCode: number) {
 	return 0;
 }
 
-export function colorFromHex(text: string): Color | null {
+export function colorFromHex(text: string): ColorRGBA {
 	if (text[0] !== '#') {
 		return null;
 	}
@@ -235,53 +279,170 @@ export function colorFromHex(text: string): Color | null {
 	return null;
 }
 
-export function colorFromHSL(hue: number, sat: number, light: number, alpha: number = 1.0): Color {
+export function colorFrom256RGB(red: number, green: number, blue: number, alpha = 1.0): ColorRGBA {
+	return {
+		red: red / 255.0,
+		green: green / 255.0,
+		blue: blue / 255.0,
+		alpha
+	};
+}
+
+export function colorFromHSL(hue: number, sat: number, light: number, alpha = 1.0): ColorRGBA {
 	hue = hue / 60.0;
 	if (sat === 0) {
 		return { red: light, green: light, blue: light, alpha };
-	} else {
+	}
+	else {
 		const hueToRgb = (t1: number, t2: number, hue: number) => {
-			while (hue < 0) { hue += 6; }
-			while (hue >= 6) { hue -= 6; }
-
-			if (hue < 1) { return (t2 - t1) * hue + t1; }
-			if (hue < 3) { return t2; }
-			if (hue < 4) { return (t2 - t1) * (4 - hue) + t1; }
+			while (hue < 0) {
+				hue += 6;
+			}
+			while (hue >= 6) {
+				hue -= 6;
+			}
+			if (hue < 1) {
+				return (t2 - t1) * hue + t1;
+			}
+			if (hue < 3) {
+				return t2;
+			}
+			if (hue < 4) {
+				return (t2 - t1) * (4 - hue) + t1;
+			}
 			return t1;
 		};
 		const t2 = light <= 0.5 ? (light * (sat + 1)) : (light + sat - (light * sat));
 		const t1 = light * 2 - t2;
-		// return new Color(hueToRgb(t1, t2, hue + 2), hueToRgb(t1, t2, hue), hueToRgb(t1, t2, hue - 2), alpha);
 		return { red: hueToRgb(t1, t2, hue + 2), green: hueToRgb(t1, t2, hue), blue: hueToRgb(t1, t2, hue - 2), alpha };
 	}
 }
 
-export function hslFromColor(rgba: Color): any {
+export function hslFromColor(rgba: ColorRGBA): ColorHSLA {
 	const r = rgba.red;
 	const g = rgba.green;
 	const b = rgba.blue;
 	const a = rgba.alpha;
-
 	const max = Math.max(r, g, b);
 	const min = Math.min(r, g, b);
 	let h = 0;
 	let s = 0;
 	const l = (min + max) / 2;
 	const chroma = max - min;
-
 	if (chroma > 0) {
 		s = Math.min((l <= 0.5 ? chroma / (2 * l) : chroma / (2 - (2 * l))), 1);
-
 		switch (max) {
-			case r: h = (g - b) / chroma + (g < b ? 6 : 0); break;
-			case g: h = (b - r) / chroma + 2; break;
-			case b: h = (r - g) / chroma + 4; break;
+			case r:
+				h = (g - b) / chroma + (g < b ? 6 : 0);
+				break;
+			case g:
+				h = (b - r) / chroma + 2;
+				break;
+			case b:
+				h = (r - g) / chroma + 4;
+				break;
 		}
-
 		h *= 60;
 		h = Math.round(h);
 	}
 	return { h, s, l, a };
+}
+
+export function colorFromHWB(hue: number, white: number, black: number, alpha = 1.0): ColorRGBA {
+	if (white + black >= 1) {
+		const gray = white / (white + black);
+		return { red: gray, green: gray, blue: gray, alpha };
+	}
+	const rgb = colorFromHSL(hue, 1, 0.5, alpha);
+	let red = rgb.red;
+	red *= (1 - white - black);
+	red += white;
+	let green = rgb.green;
+	green *= (1 - white - black);
+	green += white;
+	let blue = rgb.blue;
+	blue *= (1 - white - black);
+	blue += white;
+	return {
+		red: red,
+		green: green,
+		blue: blue,
+		alpha
+	};
+}
+
+export function hwbFromColor(rgba: ColorRGBA): ColorHWBA {
+	const hsl = hslFromColor(rgba);
+	const white = Math.min(rgba.red, rgba.green, rgba.blue);
+	const black = 1 - Math.max(rgba.red, rgba.green, rgba.blue);
+	return {
+		h: hsl.h,
+		w: white,
+		b: black,
+		a: hsl.a
+	};
+}
+
+export function hexStringFromColor(rgba: ColorRGBA): string {
+	let r = Math.ceil(rgba.red * 255).toString(16);
+	let g = Math.ceil(rgba.green * 255).toString(16);
+	let b = Math.ceil(rgba.blue * 255).toString(16);
+	let a = rgba.alpha < 1 ? Math.round(rgba.alpha * 255).toString(16) : '';
+
+	r = r.length === 1 ? '0' + r : r;
+	g = g.length === 1 ? '0' + g : g;
+	b = b.length === 1 ? '0' + b : b;
+	a = a.length === 1 ? '0' + a : a;
+
+	return '#' + r + g + b + a;
+}
+
+export function rgbStringFromColor(rgba: ColorRGBA): string {
+	let color = [
+		rgba.red,
+		rgba.green,
+		rgba.blue
+	].map((v: number) => Math.round(v * 255));
+	let a = '';
+
+	if (rgba.alpha < 1) {
+		color.push(rgba.alpha);
+		a = 'a';
+	}
+
+	return `rgb${a}(${color.join(', ')})`;
+}
+
+export function hslStringFromColor(rgba: ColorRGBA): string {
+	let hsl = hslFromColor(rgba);
+	let rgb = [
+		hsl.h,
+		Math.round(hsl.s * 100) + '%',
+		Math.round(hsl.l * 100) + '%'
+	];
+	let a = '';
+
+	if (hsl.a < 1) {
+		rgb.push(hsl.a);
+		a = 'a';
+	}
+
+	return `hsl${a}(${rgb.join(', ')})`;
+}
+
+export function hwbStringFromColor(rgba: ColorRGBA): string {
+	let hwb = hwbFromColor(rgba);
+	let rgb = [
+		hwb.h,
+		Math.round(hwb.w * 100) + '%',
+		Math.round(hwb.b * 100) + '%'
+	];
+	let a = '';
+
+	if (hwb.a < 1) {
+		a = ` / ${hwb.a}`;
+	}
+	return `hwb(${rgb.join(' ')}${a})`;
 }
 
 export function toTwoDigitHex(n: number): string {

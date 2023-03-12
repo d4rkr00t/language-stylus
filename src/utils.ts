@@ -3,8 +3,8 @@
  * @param {Array} arr
  * @return Array
  */
-export function compact(arr:Array<any>) : Array<any> {
-  return arr.filter(item => item);
+export function compact(arr: Array<any>): Array<any> {
+	return arr.filter(item => item);
 }
 
 /**
@@ -12,19 +12,19 @@ export function compact(arr:Array<any>) : Array<any> {
  * @param {String} name
  * @return String
  */
-export function prepareName(name:string) : string {
-  return name.replace(/\{|\}/g, '').trim();
+export function prepareName(name: string): string {
+	return name.replace(/\{|\}/g, '').trim();
 }
 
-export function debounce(func, wait) {
-  let timeout;
+export function debounce(func: (...args: any) => void, wait: number) {
+	let timeout: NodeJS.Timeout;
 
-  return (...args) => {
-    clearTimeout(timeout);
+	return (...args: any) => {
+		clearTimeout(timeout);
 
-    timeout = setTimeout(() => {
-      timeout = null;
-      func(...args);
-    }, wait);
-  };
+		timeout = setTimeout(() => {
+			timeout = null;
+			func(...args);
+		}, wait);
+	};
 };

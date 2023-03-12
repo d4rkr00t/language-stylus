@@ -13,16 +13,7 @@ import {
 import {
 	buildAst, flattenAndFilterAst
 } from './parser';
-import {
-	colors,
-	colorFromHex,
-	getNumericValue,
-	getAngle,
-	toTwoDigitHex,
-	colorFromHSL,
-	hslFromColor
-} from './colors';
-import cssColors from './css-colors-list';
+import * as CSSColor from './colors';
 
 function Column(search: string, text: string[], lineno: number) {
 	this.textLine = text[lineno];
@@ -38,33 +29,28 @@ Column.prototype.call = function () {
 	return this.max + this.textLine.slice(this.max).indexOf(')') + 1;
 };
 
-export function normalizeColors(colorsNode: oColor[], text: string[]): ColorInformation[] {
+export function normalizeColors(colorsNode: StylusNodeColor[], text: string[]): ColorInformation[] {
 	const colorInfo: ColorInformation[] = [];
 	const colorPosistion = new Set();
 
 	colorsNode.forEach(node => {
 		const pos = `${node.lineno}-${node.column}`;
 
-		if (!colorPosistion.has(pos) && node.type === 'string' && colors[node.name]) {
+		if (!colorPosistion.has(pos) && node.type === 'string' && CSSColor.hasColorName(node.raw)) {
 			colorPosistion.add(pos);
 			const positionStart = new Position(node.lineno, new Column(node.name, text, node.lineno).real());
 			const positionEnd = new Position(node.lineno, new Column(node.name, text, node.lineno).real() + node.raw.length);
-			const c = colorFromHex(colors[node.name]);
+			const { red, green, blue, alpha } = node.color;
 
 			colorInfo.push(new ColorInformation(
 				new Range(positionStart, positionEnd),
-				new Color(c.red, c.green, c.blue, c.alpha)
+				new Color(red, green, blue, alpha)
 			));
 		} else if (!colorPosistion.has(pos) && node.type === 'rgba') {
 			colorPosistion.add(pos);
 			const positionStart = new Position(node.lineno, new Column(node.raw, text, node.lineno).real());
 			const positionEnd = new Position(node.lineno, new Column(node.raw, text, node.lineno).real() + node.raw.length);
-			const [red, green, blue, alpha] = node.color.map((el, idx, arr) => {
-				if (idx < arr.length - 1) {
-					return getNumericValue(el, 255);
-				}
-				return el;
-			});
+			const { red, green, blue, alpha } = node.color;
 
 			colorInfo.push(new ColorInformation(
 				new Range(positionStart, positionEnd),
@@ -74,43 +60,12 @@ export function normalizeColors(colorsNode: oColor[], text: string[]): ColorInfo
 			colorPosistion.add(pos);
 			const positionStart = new Position(node.lineno, new Column(node.name, text, node.lineno).real());
 			const positionEnd = new Position(node.lineno, new Column(node.name, text, node.lineno).call());
+			const { red, green, blue, alpha } = node.color;
 
-			if (['rgb', 'rgba'].find((el) => el === node.name)) {
-				const [red, green, blue, alpha] = node.color.map((el, idx, arr) => {
-					if (idx < arr.length - 1) {
-						return getNumericValue(el[0], 255);
-					}
-					return el[0];
-				});
-
-				colorInfo.push(new ColorInformation(
-					new Range(positionStart, positionEnd),
-					new Color(red, green, blue, alpha)
-				));
-			} else if (['hsl', 'hsla'].find((el) => el === node.name)) {
-				const [hue, sat, light, alpha] = node.color.map((el, idx) => {
-					let val: any;
-					switch (idx) {
-						case 0:
-							val = getAngle(el[0]);
-							break;
-						case 1:
-						case 2:
-							val = getNumericValue(el[0], 100.0);
-							break;
-						default:
-							val = el[0];
-							break;
-					}
-					return val;
-				});
-				const colorRes = colorFromHSL(hue, sat, light, alpha);
-
-				colorInfo.push(new ColorInformation(
-					new Range(positionStart, positionEnd),
-					new Color(colorRes.red, colorRes.green, colorRes.blue, colorRes.alpha)
-				));
-			}
+			colorInfo.push(new ColorInformation(
+				new Range(positionStart, positionEnd),
+				new Color(red, green, blue, alpha)
+			));
 		}
 	});
 	// clear 'Set' position.
@@ -118,11 +73,11 @@ export function normalizeColors(colorsNode: oColor[], text: string[]): ColorInfo
 	return colorInfo;
 }
 
-interface oColor {
+interface StylusNodeColor {
 	type: string,
 	nodeName: string,
 	name: string,
-	color: any[],
+	color: CSSColor.ColorRGBA,
 	column: number,
 	lineno: number,
 	raw: string | null
@@ -133,23 +88,23 @@ export function extractColors(lines: any): any[] {
 	const innerExtractColors = (node: any): void => {
 		if (node.nodeName === 'expression') {
 			node.nodes.forEach((val: any) => {
-				if (val.nodeName === 'ident' && cssColors.indexOf(val.name) >= 0) {
-					let objColor: oColor = {
+				if (val.nodeName === 'ident' && CSSColor.hasColorName(val.string)) {
+					const objColor: StylusNodeColor = {
 						type: 'string',
 						nodeName: val.nodeName,
 						name: val.name,
-						color: [], // TODO: Add 'string' to 'rgba' function later
+						color: CSSColor.colorFromHex(CSSColor.colors[val.string]),
 						column: val.column - 1,
 						lineno: val.lineno - 1,
 						raw: val.string
 					};
 					result.push(objColor);
 				} else if (val.nodeName === 'rgba') {
-					let objColor: oColor = {
+					const objColor: StylusNodeColor = {
 						type: 'rgba',
 						nodeName: val.nodeName,
 						name: val.name,
-						color: [val.r, val.g, val.b, val.a],
+						color: CSSColor.colorFrom256RGB(val.r, val.g, val.b, val.a),
 						column: val.column - 1,
 						lineno: val.lineno - 1,
 						raw: val.raw
@@ -159,29 +114,64 @@ export function extractColors(lines: any): any[] {
 					const callNodes = [...val.args.nodes];
 					const hasOnlyUnits = (): boolean => {
 						if (callNodes.length === 1) {
-							return callNodes[0].nodes.every((v: any) => v.nodeName === 'unit');
-						}
-						return callNodes.every((v: any) => v.nodes[0].nodeName === 'unit');
-					};
-
-					if (hasOnlyUnits()) {
-						const colorUnits = (): any[] => {
-							if (callNodes.length === 1) {
-								return callNodes[0].nodes.map((v: any) => {
-									return [v.val, v.type];
-								});
-							}
-							return callNodes.map((v: any) => {
-								return [v.nodes[0].val, v.nodes[0].type];
+							return callNodes[0].nodes.every((el: any) => {
+								if (el.nodeName === 'binop') {
+									return el.left.nodeName === 'unit' && el.right.nodeName === 'unit';
+								}
+								return el.nodeName === 'unit';
 							});
 						}
+						return callNodes.every((el: any) => el.nodes[0].nodeName === 'unit');
+					};
 
-						let colorVals = colorUnits().length === 3 ? colorUnits().concat([[1, undefined]]) : colorUnits();
-						let objColor: oColor = {
+					if (hasOnlyUnits() && CSSColor.isColorConstructor(val.name)) {
+						const units = (): string[] => {
+							if (callNodes.length === 1) {
+								let sUnits: string[] = [];
+								callNodes[0].nodes.forEach((el: any) => {
+									if (el.nodeName === 'binop') {
+										let uLeft = `${el.left.val + (el.left.type ?? '')}`;
+										let uRight = `${el.right.val + (el.right.type ?? '')}`;
+										sUnits = [...sUnits, uLeft, uRight];
+									} else {
+										let uVal = `${el.val + (el.type ?? '')}`;
+										sUnits = [...sUnits, uVal];
+									}
+								});
+								return sUnits;
+							}
+							return callNodes.map((el: any) => `${el.nodes[0].val + (el.nodes[0].type ?? '')}`);
+						}
+						const colorUnits = units().length === 3 ? units().concat(['1']) : units();
+						const alpha = CSSColor.getNumericValue(colorUnits[3], 1);
+
+						let colorVal: CSSColor.ColorRGBA;
+
+						if (['rgb', 'rgba'].find((v: any) => v === val.name)) {
+							const r = CSSColor.getNumericValue(colorUnits[0], 255.0);
+							const g = CSSColor.getNumericValue(colorUnits[1], 255.0);
+							const b = CSSColor.getNumericValue(colorUnits[2], 255.0);
+
+							colorVal = { red: r, green: g, blue: b, alpha: alpha };
+						} else if (['hsl', 'hsla'].find((v: any) => v === val.name)) {
+							const h = CSSColor.getAngle(colorUnits[0]);
+							const s = CSSColor.getNumericValue(colorUnits[1], 100.0);
+							const l = CSSColor.getNumericValue(colorUnits[2], 100.0);
+
+							colorVal = CSSColor.colorFromHSL(h, s, l, alpha);
+						} else if (['hwb'].find((v: any) => v === val.name)) {
+							const h = CSSColor.getAngle(colorUnits[0]);
+							const w = CSSColor.getNumericValue(colorUnits[1], 100.0);
+							const b = CSSColor.getNumericValue(colorUnits[2], 100.0);
+
+							colorVal = CSSColor.colorFromHWB(h, w, b, alpha);
+						}
+
+						const objColor: StylusNodeColor = {
 							type: 'func-color',
 							nodeName: val.nodeName,
 							name: val.name,
-							color: colorVals,
+							color: colorVal,
 							column: val.column - 1,
 							lineno: val.lineno - 1,
 							raw: null
@@ -215,7 +205,6 @@ export function getColorsLines(ast: any): any[] {
 		} else if (node.nodeName === 'ternary' && node.falseExpr) {
 			acc = acc.concat(extractColors(node.falseExpr.val));
 		}
-
 		return acc;
 	}, []);
 }
@@ -237,30 +226,21 @@ export class StylusColorProvider implements DocumentColorProvider {
 		if (token.isCancellationRequested) {
 			return [];
 		}
+
 		const result: ColorPresentation[] = [];
-		const red256 = Math.round(color.red * 255), green256 = Math.round(color.green * 255), blue256 = Math.round(color.blue * 255);
 
-		let label;
-		if (color.alpha === 1) {
-			label = `rgb(${red256}, ${green256}, ${blue256})`;
-		} else {
-			label = `rgba(${red256}, ${green256}, ${blue256}, ${color.alpha})`;
-		}
+		let label: string;
+
+		label = CSSColor.rgbStringFromColor(color);
 		result.push({ label: label, textEdit: TextEdit.replace(context.range, label) });
 
-		if (color.alpha === 1) {
-			label = `#${toTwoDigitHex(red256)}${toTwoDigitHex(green256)}${toTwoDigitHex(blue256)}`;
-		} else {
-			label = `#${toTwoDigitHex(red256)}${toTwoDigitHex(green256)}${toTwoDigitHex(blue256)}${toTwoDigitHex(Math.round(color.alpha * 255))}`;
-		}
+		label = CSSColor.hexStringFromColor(color);
 		result.push({ label: label, textEdit: TextEdit.replace(context.range, label) });
 
-		const hsl = hslFromColor(color);
-		if (hsl.a === 1) {
-			label = `hsl(${hsl.h}, ${Math.round(hsl.s * 100)}%, ${Math.round(hsl.l * 100)}%)`;
-		} else {
-			label = `hsla(${hsl.h}, ${Math.round(hsl.s * 100)}%, ${Math.round(hsl.l * 100)}%, ${hsl.a})`;
-		}
+		label = CSSColor.hslStringFromColor(color);
+		result.push({ label: label, textEdit: TextEdit.replace(context.range, label) });
+
+		label = CSSColor.hwbStringFromColor(color);
 		result.push({ label: label, textEdit: TextEdit.replace(context.range, label) });
 
 		return result;
