@@ -38,8 +38,8 @@ export function normalizeColors(colorsNode: StylusNodeColor[], text: string[]): 
 
 		if (!colorPosistion.has(pos) && node.type === 'string' && CSSColor.hasColorName(node.raw)) {
 			colorPosistion.add(pos);
-			const positionStart = new Position(node.lineno, new Column(node.name, text, node.lineno).real());
-			const positionEnd = new Position(node.lineno, new Column(node.name, text, node.lineno).real() + node.raw.length);
+			const positionStart = new Position(node.lineno, node.column);
+			const positionEnd = new Position(node.lineno, node.column + node.raw.length);
 			const { red, green, blue, alpha } = node.color;
 
 			colorInfo.push(new ColorInformation(
@@ -48,8 +48,8 @@ export function normalizeColors(colorsNode: StylusNodeColor[], text: string[]): 
 			));
 		} else if (!colorPosistion.has(pos) && node.type === 'rgba') {
 			colorPosistion.add(pos);
-			const positionStart = new Position(node.lineno, new Column(node.raw, text, node.lineno).real());
-			const positionEnd = new Position(node.lineno, new Column(node.raw, text, node.lineno).real() + node.raw.length);
+			const positionStart = new Position(node.lineno, node.column);
+			const positionEnd = new Position(node.lineno, node.column + node.raw.length);
 			const { red, green, blue, alpha } = node.color;
 
 			colorInfo.push(new ColorInformation(
@@ -58,7 +58,7 @@ export function normalizeColors(colorsNode: StylusNodeColor[], text: string[]): 
 			));
 		} else if (!colorPosistion.has(pos) && node.type === 'func-color') {
 			colorPosistion.add(pos);
-			const positionStart = new Position(node.lineno, new Column(node.name, text, node.lineno).real());
+			const positionStart = new Position(node.lineno, node.column);
 			const positionEnd = new Position(node.lineno, new Column(node.name, text, node.lineno).call());
 			const { red, green, blue, alpha } = node.color;
 
@@ -187,6 +187,13 @@ export function extractColors(lines: any): any[] {
 					Object.keys(val.vals).forEach(oNode => {
 						result = result.concat(innerExtractColors(val.vals[oNode]));
 					});
+				} else if (val.nodeName === 'atblock') {
+					console.log(val);
+					const arrNodes = val.nodes;
+					for (let i = 0; i < arrNodes.length; i++) {
+						const element = arrNodes[i].expr;
+						result = result.concat(innerExtractColors(element));
+					}
 				}
 			});
 		}
@@ -197,6 +204,8 @@ export function extractColors(lines: any): any[] {
 }
 
 export function getColorsLines(ast: any): any[] {
+	console.log(ast);
+	
 	return (ast.nodes || ast || []).reduce((acc: any[], node: any) => {
 		if (node.nodeName === 'ident') {
 			acc = acc.concat(extractColors(node.val));
