@@ -15,6 +15,8 @@ import {
 } from './parser';
 import * as CSSColor from './colors';
 
+const stylus = require('stylus');
+
 function Column(search: string, text: string[], lineno: number) {
 	this.textLine = text[lineno];
 	this.search = search;
@@ -184,11 +186,23 @@ export function extractColors(lines: any): any[] {
 						}
 					}
 				} else if (val.nodeName === 'object') {
-					Object.keys(val.vals).forEach(oNode => {
-						result = result.concat(innerExtractColors(val.vals[oNode]));
-					});
+					const objectNodes = (n: any) => {
+						for (const key in n.vals) {
+							if (Object.prototype.hasOwnProperty.call(n.vals, key)) {
+								const element = n.vals[key];
+
+								element.nodes.forEach((el: any) => {
+									if (el.vals) {
+										objectNodes(el);
+									} else {
+										result = result.concat(innerExtractColors(element));
+									}
+								});
+							}
+						}
+					};
+					objectNodes(val);
 				} else if (val.nodeName === 'atblock') {
-					console.log(val);
 					const arrNodes = val.nodes;
 					for (let i = 0; i < arrNodes.length; i++) {
 						const element = arrNodes[i].expr;
@@ -204,8 +218,6 @@ export function extractColors(lines: any): any[] {
 }
 
 export function getColorsLines(ast: any): any[] {
-	console.log(ast);
-	
 	return (ast.nodes || ast || []).reduce((acc: any[], node: any) => {
 		if (node.nodeName === 'ident') {
 			acc = acc.concat(extractColors(node.val));
@@ -214,6 +226,8 @@ export function getColorsLines(ast: any): any[] {
 		} else if (node.nodeName === 'ternary' && node.falseExpr) {
 			acc = acc.concat(extractColors(node.falseExpr.val));
 		}
+		// console.log(acc);
+
 		return acc;
 	}, []);
 }
@@ -225,7 +239,8 @@ export class StylusColorProvider implements DocumentColorProvider {
 			return [];
 		}
 		const documentTxt = document.getText();
-		const ast = flattenAndFilterAst(buildAst(documentTxt));
+		const parser = new stylus.Parser(documentTxt).parse();
+		const ast = flattenAndFilterAst(parser);
 		const colorLines = getColorsLines(ast);
 		const list = normalizeColors(colorLines, documentTxt.split('\n'));
 		return new Promise(resolve => { resolve(list); });
